@@ -1,41 +1,49 @@
 import { Metadata } from "next"
 
-import FeaturedProducts from "@modules/home/components/featured-products"
-import Hero from "@modules/home/components/hero"
-import { listCollections } from "@lib/data/collections"
-import { getRegion } from "@lib/data/regions"
+import HeroUploadSection from "@modules/line-portrait/hero-upload-section"
+import StyleSelectorSection from "@modules/line-portrait/style-selector-section"
+import GalleryInspirationSection from "@modules/line-portrait/gallery-inspiration-section"
+import HowItWorksSection from "@modules/line-portrait/how-it-works-section"
+import KeyFeaturesSection from "@modules/line-portrait/key-features-section"
+import ProductUpsellSection from "@modules/line-portrait/product-upsell-section"
+import TestimonialsSection from "@modules/line-portrait/testimonials-section"
+import FAQSection from "@modules/line-portrait/faq-section"
+import FinalCTASection from "@modules/line-portrait/final-cta-section"
 
 export const metadata: Metadata = {
-  title: "Medusa Next.js Starter Template",
+  title: "LineVibes | AI Line Portrait Generator – Turn Photos into Art",
   description:
-    "A performant frontend ecommerce starter template with Next.js 15 and Medusa.",
+    "Transform your photos into stunning minimalist line art portraits. Choose from 5 unique styles, preview instantly, and download or order canvas prints. AI-powered, private, and print-ready.",
+  keywords: [
+    "line art",
+    "portrait generator",
+    "AI art",
+    "line drawing",
+    "minimalist portrait",
+    "canvas print",
+    "photo to art",
+    "line portrait",
+  ],
+  openGraph: {
+    title: "LineVibes | AI Line Portrait Generator",
+    description:
+      "Turn any photo into a timeless line portrait. Upload, choose a style, download or print.",
+    type: "website",
+  },
 }
 
-export default async function Home(props: {
-  params: Promise<{ countryCode: string }>
-}) {
-  const params = await props.params
-
-  const { countryCode } = params
-
-  const region = await getRegion(countryCode)
-
-  const { collections } = await listCollections({
-    fields: "id, handle, title",
-  })
-
-  if (!collections || !region) {
-    return null
-  }
-
+export default function Home() {
   return (
     <>
-      <Hero />
-      <div className="py-12">
-        <ul className="flex flex-col gap-x-6">
-          <FeaturedProducts collections={collections} region={region} />
-        </ul>
-      </div>
+      <HeroUploadSection />
+      <StyleSelectorSection />
+      <GalleryInspirationSection />
+      <HowItWorksSection />
+      <KeyFeaturesSection />
+      <ProductUpsellSection />
+      <TestimonialsSection />
+      <FAQSection />
+      <FinalCTASection />
     </>
   )
 }

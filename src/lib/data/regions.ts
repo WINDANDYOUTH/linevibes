@@ -8,13 +8,18 @@ import { getCacheOptions } from "./cookies"
 export const listRegions = async () => {
   const next = {
     ...(await getCacheOptions("regions")),
+    // Revalidate every 5 minutes (300 seconds)
+    // This provides a good balance between performance and data freshness
+    revalidate: 300,
   }
 
   return sdk.client
     .fetch<{ regions: HttpTypes.StoreRegion[] }>(`/store/regions`, {
       method: "GET",
       next,
-      cache: "force-cache",
+      // In development, use no-store to always get fresh data
+      // In production, rely on revalidate for time-based caching
+      cache: process.env.NODE_ENV === "development" ? "no-store" : "default",
     })
     .then(({ regions }) => regions)
     .catch(medusaError)

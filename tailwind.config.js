@@ -34,6 +34,13 @@ module.exports = {
           80: "#1F2937",
           90: "#111827",
         },
+        linevibes: {
+          blue: "#0057D9",     // Blueprint Blue
+          dark: "#0B1120",     // Deep Navy/Black
+          paper: "#FDFBF7",    // Warm Paper
+          ink: "#1A1A1A",      // Pen Ink
+          grid: "#E5E7EB",     // Technical Grid
+        },
       },
       borderRadius: {
         none: "0px",

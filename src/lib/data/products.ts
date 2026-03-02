@@ -68,7 +68,7 @@ export const listProducts = async ({
         },
         headers,
         next,
-        cache: "force-cache",
+        cache: "no-store", // Disable cache for development to ensure fresh product data
       }
     )
     .then(({ products, count }) => {

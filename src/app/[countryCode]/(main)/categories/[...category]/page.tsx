@@ -15,6 +15,73 @@ type Props = {
   }>
 }
 
+// Category-specific SEO content
+const categorySEO: Record<
+  string,
+  { title: string; description: string; keywords: string[] }
+> = {
+  automotive: {
+    title: "Automotive Line Art | Car Blueprints & Drawings",
+    description:
+      "Custom automotive line art and car blueprints. Transform your classic car, sports car, or motorcycle into stunning precision-plotted artwork. Perfect gifts for car enthusiasts.",
+    keywords: [
+      "car art",
+      "automotive drawing",
+      "car blueprint",
+      "vehicle poster",
+      "classic car art",
+    ],
+  },
+  aviation: {
+    title: "Aviation Line Art | Aircraft Blueprints & Drawings",
+    description:
+      "Aviation line art and aircraft blueprints. Precision-plotted drawings of planes, helicopters, and aerospace engineering. Perfect for pilots and aviation enthusiasts.",
+    keywords: [
+      "aircraft art",
+      "aviation blueprint",
+      "plane drawing",
+      "pilot gift",
+      "aerospace art",
+    ],
+  },
+  "ocean-nature": {
+    title: "Ocean & Nature Line Art | Waves, Mountains & Landscapes",
+    description:
+      "Ocean and nature line art. Minimalist wave drawings, mountain landscapes, and natural scenery precision-plotted with archival ink. Bring nature indoors.",
+    keywords: [
+      "wave art",
+      "ocean drawing",
+      "nature art",
+      "mountain landscape",
+      "minimalist nature",
+    ],
+  },
+  "family-love": {
+    title: "Family & Love Art | Custom Portraits & Pet Drawings",
+    description:
+      "Custom family and pet line art portraits. Transform photos of loved ones, couples, and pets into unique precision-plotted artwork. Meaningful personalized gifts.",
+    keywords: [
+      "custom portrait",
+      "pet portrait",
+      "family art",
+      "couple drawing",
+      "memorial art",
+    ],
+  },
+  architecture: {
+    title: "Architecture Line Art | Buildings, Skylines & Home Portraits",
+    description:
+      "Architectural line art and building drawings. Custom home portraits, city skylines, and landmark artwork. Precision-plotted with archival ink.",
+    keywords: [
+      "architecture art",
+      "building drawing",
+      "city skyline",
+      "home portrait",
+      "landmark art",
+    ],
+  },
+}
+
 export async function generateStaticParams() {
   const product_categories = await listCategories()
 
@@ -47,15 +114,31 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   try {
     const productCategory = await getCategoryByHandle(params.category)
 
-    const title = productCategory.name + " | Medusa Store"
+    // Get category-specific SEO or use defaults
+    const seo = categorySEO[productCategory.handle]
 
-    const description = productCategory.description ?? `${title} category.`
+    const title = seo?.title || `${productCategory.name} Line Art`
+    const description =
+      seo?.description ||
+      productCategory.description ||
+      `Browse our ${productCategory.name} collection of precision-plotted line art.`
+    const keywords = seo?.keywords || [
+      productCategory.name.toLowerCase(),
+      "line art",
+      "precision art",
+    ]
 
     return {
-      title: `${title} | Medusa Store`,
+      title: `${title} | LineVibes`,
       description,
+      keywords: keywords.join(", "),
+      openGraph: {
+        title: `${title} | LineVibes`,
+        description,
+        type: "website",
+      },
       alternates: {
-        canonical: `${params.category.join("/")}`,
+        canonical: `/categories/${params.category.join("/")}`,
       },
     }
   } catch (error) {
@@ -83,3 +166,4 @@ export default async function CategoryPage(props: Props) {
     />
   )
 }
+

@@ -3,8 +3,9 @@
 import { loadStripe } from "@stripe/stripe-js"
 import React from "react"
 import StripeWrapper from "./stripe-wrapper"
+import PayPalWrapper from "./paypal-wrapper"
 import { HttpTypes } from "@medusajs/types"
-import { isStripeLike } from "@lib/constants"
+import { isStripeLike, isPaypal } from "@lib/constants"
 
 type PaymentWrapperProps = {
   cart: HttpTypes.StoreCart
@@ -44,7 +45,12 @@ const PaymentWrapper: React.FC<PaymentWrapperProps> = ({ cart, children }) => {
     )
   }
 
+  if (isPaypal(paymentSession?.provider_id)) {
+    return <PayPalWrapper cart={cart}>{children}</PayPalWrapper>
+  }
+
   return <div>{children}</div>
 }
 
 export default PaymentWrapper
+

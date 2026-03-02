@@ -1,16 +1,26 @@
 import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
 import "styles/globals.css"
+import GoogleTagManager, { GoogleTagManagerNoScript } from "@modules/common/components/google-tag-manager"
+import { AnalyticsProvider } from "@lib/analytics/provider"
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
+  title: "LineVibes | Personalized Plotter Art",
+  description: "Custom machine-drawn artwork and personalized blueprints.",
 }
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" data-mode="light">
+      <head>
+        <GoogleTagManager />
+      </head>
       <body>
-        <main className="relative">{props.children}</main>
+        <GoogleTagManagerNoScript />
+        <AnalyticsProvider>
+          <main className="relative">{props.children}</main>
+        </AnalyticsProvider>
       </body>
     </html>
   )

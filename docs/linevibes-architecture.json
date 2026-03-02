@@ -1,0 +1,419 @@
+{
+  "brand": "LineVibes",
+  "description": "Custom line-art illustrations that transform memories into timeless art",
+  "lastUpdated": "2026-01-30",
+  
+  "navigationArchitecture": {
+    "desktop": {
+      "structure": [
+        { "name": "Shop", "href": "/store", "hasMegaMenu": true },
+        { "name": "Custom Order", "href": "/custom", "hasMegaMenu": false, "highlight": true },
+        { "name": "Occasions", "href": "/collections/occasions", "hasMegaMenu": true },
+        { "name": "Our Story", "href": "/about", "hasMegaMenu": false }
+      ],
+      "megaMenus": {
+        "Shop": {
+          "byTheme": {
+            "title": "By Theme",
+            "items": [
+              { "name": "Automotive", "href": "/categories/automotive", "icon": "🚗" },
+              { "name": "Aviation", "href": "/categories/aviation", "icon": "✈️" },
+              { "name": "Ocean & Nature", "href": "/categories/ocean-nature", "icon": "🌊" },
+              { "name": "Family & Love", "href": "/categories/family-love", "icon": "❤️" }
+            ]
+          },
+          "byStyle": {
+            "title": "By Style",
+            "items": [
+              { "name": "Minimalist", "href": "/collections/minimalist" },
+              { "name": "Blueprint", "href": "/collections/blueprint" },
+              { "name": "Detailed", "href": "/collections/detailed" },
+              { "name": "Bold Stroke", "href": "/collections/bold-stroke" }
+            ]
+          },
+          "byFormat": {
+            "title": "By Format",
+            "items": [
+              { "name": "Digital Download", "href": "/collections/digital" },
+              { "name": "Printed Poster", "href": "/collections/printed" },
+              { "name": "Framed Art", "href": "/collections/framed" },
+              { "name": "Canvas", "href": "/collections/canvas" }
+            ]
+          }
+        },
+        "Occasions": {
+          "giftIdeas": {
+            "title": "Gift Ideas",
+            "items": [
+              { "name": "Anniversary Gifts", "href": "/collections/anniversary" },
+              { "name": "Memorial Tributes", "href": "/collections/memorial" },
+              { "name": "Birthday Gifts", "href": "/collections/birthday" },
+              { "name": "Wedding Gifts", "href": "/collections/wedding" }
+            ]
+          },
+          "byRecipient": {
+            "title": "Gift For",
+            "items": [
+              { "name": "Gift for Him", "href": "/collections/gift-for-him" },
+              { "name": "Gift for Her", "href": "/collections/gift-for-her" },
+              { "name": "Gift for Dad", "href": "/collections/gift-for-dad" },
+              { "name": "Gift for Mom", "href": "/collections/gift-for-mom" }
+            ]
+          }
+        }
+      }
+    },
+    "mobile": {
+      "primaryNav": [
+        { "name": "Shop All", "href": "/store", "expandable": false },
+        { 
+          "name": "By Theme", 
+          "href": "/categories",
+          "expandable": true,
+          "subItems": [
+            { "name": "Automotive", "href": "/categories/automotive" },
+            { "name": "Aviation", "href": "/categories/aviation" },
+            { "name": "Ocean & Nature", "href": "/categories/ocean-nature" },
+            { "name": "Family & Love", "href": "/categories/family-love" }
+          ]
+        },
+        {
+          "name": "By Occasion",
+          "href": "/collections",
+          "expandable": true,
+          "subItems": [
+            { "name": "Anniversary", "href": "/collections/anniversary" },
+            { "name": "Memorial", "href": "/collections/memorial" },
+            { "name": "Wedding", "href": "/collections/wedding" },
+            { "name": "Birthday", "href": "/collections/birthday" }
+          ]
+        },
+        { "name": "Custom Order", "href": "/custom", "expandable": false, "highlight": true }
+      ],
+      "secondaryNav": [
+        { "name": "Our Story", "href": "/about" },
+        { "name": "How It Works", "href": "/how-it-works" },
+        { "name": "FAQ", "href": "/faq" },
+        { "name": "Contact", "href": "/contact" }
+      ]
+    },
+    "urlStructure": {
+      "categories": "/categories/{theme-handle}",
+      "collections": "/collections/{collection-handle}",
+      "products": "/products/{product-handle}",
+      "custom": "/custom"
+    }
+  },
+
+  "categorySystem": {
+    "description": "Categories are permanent, theme-based groupings that define what the artwork depicts",
+    "categories": [
+      {
+        "name": "Automotive",
+        "handle": "automotive",
+        "description": "Classic cars, motorcycles, and racing machines transformed into artistic line drawings",
+        "icon": "🚗",
+        "subcategories": [
+          { "name": "Classic Cars", "handle": "classic-cars" },
+          { "name": "Sports Cars", "handle": "sports-cars" },
+          { "name": "Motorcycles", "handle": "motorcycles" },
+          { "name": "Racing", "handle": "racing" }
+        ],
+        "seoKeywords": ["car art", "automotive art", "classic car poster", "car lover gift"]
+      },
+      {
+        "name": "Aviation",
+        "handle": "aviation",
+        "description": "Aircraft, helicopters, and aerospace engineering captured in precision line art",
+        "icon": "✈️",
+        "subcategories": [
+          { "name": "Commercial Aircraft", "handle": "commercial-aircraft" },
+          { "name": "Military Jets", "handle": "military-jets" },
+          { "name": "Vintage Planes", "handle": "vintage-planes" },
+          { "name": "Helicopters", "handle": "helicopters" }
+        ],
+        "seoKeywords": ["aviation art", "pilot gift", "airplane poster", "aircraft blueprint"]
+      },
+      {
+        "name": "Ocean & Nature",
+        "handle": "ocean-nature",
+        "description": "Waves, marine life, landscapes, and natural wonders in minimalist line form",
+        "icon": "🌊",
+        "subcategories": [
+          { "name": "Waves & Surf", "handle": "waves-surf" },
+          { "name": "Marine Life", "handle": "marine-life" },
+          { "name": "Boats & Yachts", "handle": "boats-yachts" },
+          { "name": "Landscapes", "handle": "landscapes" }
+        ],
+        "seoKeywords": ["ocean art", "wave drawing", "nature art", "beach decor"]
+      },
+      {
+        "name": "Family & Love",
+        "handle": "family-love",
+        "description": "Portraits, couples, pets, and cherished moments preserved in timeless lines",
+        "icon": "❤️",
+        "subcategories": [
+          { "name": "Couple Portraits", "handle": "couple-portraits" },
+          { "name": "Family Portraits", "handle": "family-portraits" },
+          { "name": "Pet Portraits", "handle": "pet-portraits" },
+          { "name": "Memorial Art", "handle": "memorial-art" }
+        ],
+        "seoKeywords": ["custom portrait", "couple art", "family drawing", "pet memorial"]
+      },
+      {
+        "name": "Architecture",
+        "handle": "architecture",
+        "description": "Buildings, cityscapes, and structural marvels drawn with architectural precision",
+        "icon": "🏛️",
+        "subcategories": [
+          { "name": "Cityscapes", "handle": "cityscapes" },
+          { "name": "Landmarks", "handle": "landmarks" },
+          { "name": "Home Portraits", "handle": "home-portraits" },
+          { "name": "Interior Spaces", "handle": "interior-spaces" }
+        ],
+        "seoKeywords": ["architecture art", "cityscape drawing", "building art", "house portrait"]
+      }
+    ]
+  },
+
+  "collectionStrategy": {
+    "description": "Collections are flexible, marketing-driven groupings for campaigns and discovery",
+    "types": {
+      "style": {
+        "description": "Grouped by visual aesthetic",
+        "examples": [
+          { "name": "Minimalist", "handle": "minimalist", "seo": "Simple, clean, single-line drawings" },
+          { "name": "Blueprint", "handle": "blueprint", "seo": "Technical schematic-style art" },
+          { "name": "Detailed", "handle": "detailed", "seo": "Intricate, multi-layered line work" },
+          { "name": "Bold Stroke", "handle": "bold-stroke", "seo": "Thick, expressive lines with contrast" }
+        ]
+      },
+      "occasion": {
+        "description": "Grouped by gifting purpose",
+        "examples": [
+          { "name": "Anniversary Gifts", "handle": "anniversary" },
+          { "name": "Memorial Tributes", "handle": "memorial" },
+          { "name": "Wedding Gifts", "handle": "wedding" },
+          { "name": "Birthday Gifts", "handle": "birthday" },
+          { "name": "Father's Day", "handle": "fathers-day" },
+          { "name": "Mother's Day", "handle": "mothers-day" }
+        ]
+      },
+      "format": {
+        "description": "Grouped by delivery/product type",
+        "examples": [
+          { "name": "Digital Downloads", "handle": "digital" },
+          { "name": "Printed Posters", "handle": "printed" },
+          { "name": "Framed Art", "handle": "framed" },
+          { "name": "Canvas Prints", "handle": "canvas" }
+        ]
+      },
+      "marketing": {
+        "description": "Promotional and seasonal collections",
+        "examples": [
+          { "name": "New Arrivals", "handle": "new-in" },
+          { "name": "Best Sellers", "handle": "best-sellers" },
+          { "name": "Staff Picks", "handle": "staff-picks" },
+          { "name": "Limited Edition", "handle": "limited-edition" }
+        ]
+      }
+    },
+    "vsCategories": {
+      "whenToUseCategories": "Permanent, hierarchical, SEO-focused. 'What is this art about?'",
+      "whenToUseCollections": "Flexible, marketing-focused, campaign-driven. 'Why should I buy this?'"
+    }
+  },
+
+  "tagFramework": {
+    "description": "Tags enable cross-cutting filtering and search functionality",
+    "tagTypes": {
+      "theme": {
+        "prefix": "theme:",
+        "examples": ["theme:automotive", "theme:aviation", "theme:ocean", "theme:family", "theme:memorial"]
+      },
+      "style": {
+        "prefix": "style:",
+        "examples": ["style:minimalist", "style:blueprint", "style:detailed", "style:bold", "style:geometric"]
+      },
+      "emotion": {
+        "prefix": "emotion:",
+        "examples": ["emotion:nostalgic", "emotion:romantic", "emotion:peaceful", "emotion:powerful", "emotion:memorial"]
+      },
+      "occasion": {
+        "prefix": "occasion:",
+        "examples": ["occasion:anniversary", "occasion:birthday", "occasion:wedding", "occasion:memorial", "occasion:fathers-day"]
+      },
+      "complexity": {
+        "prefix": "complexity:",
+        "examples": ["complexity:simple", "complexity:medium", "complexity:premium"]
+      },
+      "format": {
+        "prefix": "format:",
+        "examples": ["format:digital", "format:print", "format:framed", "format:canvas"]
+      },
+      "recipient": {
+        "prefix": "gift-for:",
+        "examples": ["gift-for:him", "gift-for:her", "gift-for:dad", "gift-for:mom", "gift-for:couple"]
+      }
+    },
+    "bestPractices": {
+      "tagsPerProduct": "5-10 tags recommended",
+      "filteringLogic": "AND within same prefix, OR across different prefixes",
+      "searchOptimization": "Tags are indexed for full-text search"
+    }
+  },
+
+  "productModel": {
+    "productTypes": [
+      {
+        "name": "Custom Portrait",
+        "description": "User uploads photo, artist transforms to line art",
+        "requiresUpload": true,
+        "basePrice": 4500,
+        "isDigital": false
+      },
+      {
+        "name": "Ready-Made Art",
+        "description": "Pre-designed line art available for purchase",
+        "requiresUpload": false,
+        "basePrice": 3500,
+        "isDigital": false
+      },
+      {
+        "name": "Digital Download",
+        "description": "High-resolution file delivered digitally",
+        "requiresUpload": false,
+        "basePrice": 1500,
+        "isDigital": true
+      }
+    ],
+    "variantOptions": {
+      "Size": ["8x10", "11x14", "16x20", "18x24", "24x36", "A4", "A3", "A2"],
+      "Paper": ["Museum White", "Classic Blue", "Vintage Cream", "Black"],
+      "Frame": ["No Frame", "Black Wood", "Natural Oak", "White Wood", "Floating Frame"],
+      "Style": ["Minimalist", "Detailed", "Blueprint", "Bold Stroke"]
+    },
+    "metadata": {
+      "required": ["technique", "estimated_delivery_days"],
+      "optional": ["complexity_level", "popularity_score", "artist_notes", "customizable"]
+    }
+  },
+
+  "skuNamingSystem": {
+    "format": "{THEME}-{STYLE}-{SIZE}-{PAPER}-{FRAME}-{VERSION}",
+    "codes": {
+      "themes": {
+        "AUTO": "Automotive",
+        "AVIA": "Aviation",
+        "OCNR": "Ocean & Nature",
+        "FMLV": "Family & Love",
+        "ARCH": "Architecture",
+        "CUST": "Custom Order"
+      },
+      "styles": {
+        "MN": "Minimalist",
+        "BP": "Blueprint",
+        "DT": "Detailed",
+        "BS": "Bold Stroke"
+      },
+      "sizes": {
+        "810": "8x10",
+        "1114": "11x14",
+        "1620": "16x20",
+        "1824": "18x24",
+        "2436": "24x36",
+        "A4": "A4",
+        "A3": "A3",
+        "A2": "A2"
+      },
+      "papers": {
+        "MW": "Museum White",
+        "CB": "Classic Blue",
+        "VC": "Vintage Cream",
+        "BK": "Black"
+      },
+      "frames": {
+        "NF": "No Frame",
+        "BW": "Black Wood",
+        "NO": "Natural Oak",
+        "WW": "White Wood"
+      }
+    },
+    "examples": [
+      { "sku": "AUTO-BP-1824-CB-NF-01", "description": "Automotive Blueprint, 18x24, Classic Blue, No Frame, v1" },
+      { "sku": "FMLV-MN-1114-MW-NO-01", "description": "Family Minimalist, 11x14, Museum White, Natural Oak Frame, v1" },
+      { "sku": "CUST-DT-1620-MW-BW-01", "description": "Custom Detailed, 16x20, Museum White, Black Wood Frame, v1" }
+    ]
+  },
+
+  "adminWorkflow": {
+    "productCreation": {
+      "steps": [
+        "1. Choose Product Type (Custom Portrait, Ready-Made, Digital)",
+        "2. Set Primary Category (Theme-based)",
+        "3. Add to relevant Collections (Style, Occasion, Format)",
+        "4. Apply Tags (5-10 covering theme, style, emotion, occasion)",
+        "5. Configure Variants (Size + Paper + Frame combinations)",
+        "6. Set Metadata (technique, delivery, complexity)",
+        "7. Upload Images (main, lifestyle, detail shots)",
+        "8. Write SEO-optimized Description",
+        "9. Generate SKUs following naming convention",
+        "10. Assign to Sales Channels"
+      ]
+    },
+    "taggingBestPractices": [
+      "Always include 1 theme tag",
+      "Always include 1 style tag", 
+      "Include 1-2 emotion tags for discoverability",
+      "Add occasion tags if gift-appropriate",
+      "Mark gift-for tags for recipient filtering"
+    ],
+    "imageOrganization": {
+      "naming": "{product-handle}-{view}-{number}.{ext}",
+      "views": ["main", "lifestyle", "detail", "frame-preview", "size-comparison"],
+      "requirements": "Min 3 images per product, 2000x2000px minimum"
+    }
+  },
+
+  "relatedProductsLogic": {
+    "tiers": [
+      {
+        "priority": 1,
+        "name": "Same Theme + Style",
+        "weight": 10,
+        "description": "Products sharing both category AND style tag"
+      },
+      {
+        "priority": 2,
+        "name": "Same Occasion",
+        "weight": 7,
+        "description": "Products with matching occasion tags (memorial, anniversary, etc.)"
+      },
+      {
+        "priority": 3,
+        "name": "Same Theme Only",
+        "weight": 5,
+        "description": "Fallback to category-only matching"
+      },
+      {
+        "priority": 4,
+        "name": "Best Sellers",
+        "weight": 3,
+        "description": "Popular products within the same category"
+      }
+    ],
+    "implementation": "Use Medusa product tags and metadata.popularity_score for scoring"
+  },
+
+  "searchFilterUX": {
+    "filterGroups": [
+      { "name": "Theme", "field": "category_id", "multi": true },
+      { "name": "Style", "field": "tags", "prefix": "style:", "multi": true },
+      { "name": "Occasion", "field": "tags", "prefix": "occasion:", "multi": true },
+      { "name": "Format", "field": "tags", "prefix": "format:", "multi": true },
+      { "name": "Price Range", "field": "price", "type": "range" },
+      { "name": "Complexity", "field": "tags", "prefix": "complexity:", "multi": true }
+    ],
+    "searchableFields": ["title", "description", "tags.value", "metadata.keywords"]
+  }
+}
