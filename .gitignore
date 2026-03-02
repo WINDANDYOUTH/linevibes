@@ -55,3 +55,10 @@ dump.rdb
 /blob-report/
 /playwright/.cache/
 /playwright/.auth
+
+# large/temp files
+*.zip
+temp_key.txt
+*.log
+linevibes-backend/.env
+linevibes-backend/data-check-output.txt
