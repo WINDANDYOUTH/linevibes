@@ -28,7 +28,8 @@
     "@medusajs/medusa": "2.13.1",
     "@paypal/paypal-server-sdk": "^2.1.0",
     "@segment/analytics-node": "^2.3.0",
-    "medusa-payment-paypal": "^6.0.5"
+    "medusa-payment-paypal": "^6.0.5",
+    "resend": "^6.9.3"
   },
   "devDependencies": {
     "@medusajs/test-utils": "2.13.1",
