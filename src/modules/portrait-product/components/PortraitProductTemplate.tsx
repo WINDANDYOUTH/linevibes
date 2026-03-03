@@ -96,12 +96,13 @@ export default function PortraitProductTemplate({
         return
       }
 
-      // Build metadata based on the selected tab
+      // Build metadata — ALL variants include digital download
       const metadata: Record<string, string> = {
         portrait_session_id: sessionId,
         portrait_image_url: portraitImageUrl,
         portrait_style: portraitStyle,
         variant_type: activeTab,
+        includes_digital_download: "true",
       }
 
       if (activeTab === "print") {
@@ -116,6 +117,7 @@ export default function PortraitProductTemplate({
         variantId,
         quantity: 1,
         countryCode,
+        metadata,
       })
     } catch (error) {
       console.error("Failed to add to cart:", error)
@@ -223,6 +225,21 @@ export default function PortraitProductTemplate({
                 />
               )}
             </div>
+
+            {/* Digital download included notice (for Print & Canvas) */}
+            {activeTab !== "digital" && (
+              <div className="mt-4 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-linevibes-blue/5 border border-linevibes-blue/10">
+                <span className="text-lg">📥</span>
+                <div>
+                  <p className="text-xs font-semibold text-gray-900">
+                    Includes Free Digital Download
+                  </p>
+                  <p className="text-[11px] text-gray-500">
+                    High-res PNG + SVG files sent to your email after purchase
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Satisfaction Guarantee */}
             <div className="mt-8 p-4 rounded-xl bg-gray-50 border border-gray-100">

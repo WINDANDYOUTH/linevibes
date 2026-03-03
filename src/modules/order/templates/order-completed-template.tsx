@@ -8,6 +8,7 @@ import OnboardingCta from "@modules/order/components/onboarding-cta"
 import OrderDetails from "@modules/order/components/order-details"
 import ShippingDetails from "@modules/order/components/shipping-details"
 import PaymentDetails from "@modules/order/components/payment-details"
+import PortraitDownloadCard from "@modules/order/components/portrait-download-card"
 import { HttpTypes } from "@medusajs/types"
 
 type OrderCompletedTemplateProps = {
@@ -20,6 +21,11 @@ export default async function OrderCompletedTemplate({
   const cookies = await nextCookies()
 
   const isOnboarding = cookies.get("_medusa_onboarding")?.value === "true"
+
+  // Check if any line items are portrait products (have portrait metadata)
+  const hasPortraitItems = order.items?.some(
+    (item) => item.metadata?.includes_digital_download === "true"
+  )
 
   return (
     <div className="py-6 min-h-[calc(100vh-64px)]">
@@ -37,6 +43,15 @@ export default async function OrderCompletedTemplate({
             <span>Your order was placed successfully.</span>
           </Heading>
           <OrderDetails order={order} />
+
+          {/* Portrait Digital Download Section */}
+          {hasPortraitItems && order.items && (
+            <PortraitDownloadCard
+              items={order.items}
+              email={order.email || ""}
+            />
+          )}
+
           <Heading level="h2" className="flex flex-row text-3xl-regular">
             Summary
           </Heading>
@@ -50,3 +65,4 @@ export default async function OrderCompletedTemplate({
     </div>
   )
 }
+
