@@ -19,6 +19,7 @@ import { nanoid } from "nanoid"
 import { getPool } from "@lib/db"
 import { ensurePortraitSessionsTable } from "@lib/db/init"
 import { uploadToR2, portraitKey } from "@lib/r2"
+import { getCustomerIdFromRequest } from "@lib/auth/api-auth"
 import {
   generateLinePortrait,
   downloadImage,
@@ -64,13 +65,16 @@ export async function POST(request: NextRequest) {
     const pool = getPool()
     const sessionId = nanoid(16)
 
+    // Get customer ID if logged in (optional, for portrait history)
+    const customerId = await getCustomerIdFromRequest()
+
     await pool.query(
-      `INSERT INTO portrait_sessions (id, status, style)
-       VALUES ($1, 'generating', $2)`,
-      [sessionId, style]
+      `INSERT INTO portrait_sessions (id, status, style, customer_id)
+       VALUES ($1, 'generating', $2, $3)`,
+      [sessionId, style, customerId]
     )
 
-    console.log(`[Portrait] Session created: ${sessionId} (style: ${style})`)
+    console.log(`[Portrait] Session created: ${sessionId} (style: ${style}, customer: ${customerId || 'anonymous'})`)
 
     // ─── 3. Upload Original Photo to R2 ─────────────────
     const fileBuffer = Buffer.from(await file.arrayBuffer())

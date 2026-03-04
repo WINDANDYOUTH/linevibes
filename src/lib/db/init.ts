@@ -18,6 +18,7 @@ export async function ensurePortraitSessionsTable(): Promise<void> {
       id              TEXT PRIMARY KEY,
       status          TEXT NOT NULL DEFAULT 'pending',
       style           TEXT NOT NULL DEFAULT 'classic',
+      customer_id     TEXT,
       original_url    TEXT,
       portrait_url    TEXT,
       portrait_svg_url TEXT,
@@ -33,10 +34,22 @@ export async function ensurePortraitSessionsTable(): Promise<void> {
 
     CREATE INDEX IF NOT EXISTS idx_portrait_sessions_expires_at
       ON portrait_sessions (expires_at);
+
+    CREATE INDEX IF NOT EXISTS idx_portrait_sessions_customer_id
+      ON portrait_sessions (customer_id);
   `)
+
+  // Add customer_id column if table already exists without it
+  await pool.query(`
+    ALTER TABLE portrait_sessions
+      ADD COLUMN IF NOT EXISTS customer_id TEXT;
+  `).catch(() => {
+    // Column might already exist, that's fine
+  })
 
   initialized = true
   console.log("[DB] portrait_sessions table ensured")
 }
 
 export default ensurePortraitSessionsTable
+
