@@ -2,27 +2,29 @@
  * Portrait Session Data Utilities
  *
  * Handles fetching and managing portrait generation session data.
- * Session data is stored in Cloudflare R2 (images) and KV (metadata).
+ * Session data is stored in PostgreSQL (sessions) and Cloudflare R2 (images).
  *
- * Current implementation: placeholder/demo mode
- * Production: Replace with actual Cloudflare R2/KV API calls
+ * Server-side: Queries PostgreSQL directly
+ * Client-side: Uses API routes
  */
 
 export type PortraitSession = {
   /** Unique session identifier */
   sessionId: string
   /** Status of the portrait generation */
-  status: "generating" | "completed" | "expired"
+  status: "pending" | "generating" | "completed" | "failed" | "expired"
   /** URL to the generated portrait image (PNG) */
   portraitUrl: string
   /** URL to the SVG version (if available) */
   portraitSvgUrl: string
   /** URL to the original uploaded photo */
-  originalPhotoUrl: string
+  originalUrl: string
   /** Thumbnail URL for previews */
   thumbnailUrl: string
   /** Selected art style */
   style: string
+  /** Error message if generation failed */
+  errorMessage?: string
   /** When the session was created */
   createdAt: string
   /** When the session/download links expire */
@@ -32,9 +34,9 @@ export type PortraitSession = {
 /**
  * Fetches portrait session data by session ID.
  *
- * In production, this will query:
- * 1. Cloudflare KV for session metadata
- * 2. Cloudflare R2 for image URLs (pre-signed if needed)
+ * This function can be called from both server and client contexts:
+ * - Server (RSC): Queries PostgreSQL directly
+ * - Client: Calls the /api/portrait/session endpoint
  *
  * @param sessionId - The session ID from the URL parameter
  * @returns Session data or null if not found/expired
@@ -42,64 +44,68 @@ export type PortraitSession = {
 export async function fetchPortraitSession(
   sessionId: string
 ): Promise<PortraitSession | null> {
-  // ─────────────────────────────────────────────────────
-  // TODO: Replace with actual Cloudflare R2/KV integration
-  //
-  // Example production implementation:
-  //
-  // const KV_NAMESPACE = process.env.CLOUDFLARE_KV_NAMESPACE_ID
-  // const R2_BUCKET = process.env.CLOUDFLARE_R2_BUCKET
-  // const R2_PUBLIC_URL = process.env.CLOUDFLARE_R2_PUBLIC_URL
-  //
-  // // 1. Fetch session metadata from Cloudflare KV
-  // const response = await fetch(
-  //   `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/storage/kv/namespaces/${KV_NAMESPACE}/values/session:${sessionId}`,
-  //   { headers: { Authorization: `Bearer ${CF_API_TOKEN}` } }
-  // )
-  //
-  // if (!response.ok) return null
-  //
-  // const metadata = await response.json()
-  //
-  // // 2. Check expiration
-  // if (new Date(metadata.expiresAt) < new Date()) return null
-  //
-  // // 3. Build image URLs from R2
-  // return {
-  //   sessionId,
-  //   status: metadata.status,
-  //   portraitUrl: `${R2_PUBLIC_URL}/portraits/${sessionId}/portrait.png`,
-  //   portraitSvgUrl: `${R2_PUBLIC_URL}/portraits/${sessionId}/portrait.svg`,
-  //   originalPhotoUrl: `${R2_PUBLIC_URL}/portraits/${sessionId}/original.jpg`,
-  //   thumbnailUrl: `${R2_PUBLIC_URL}/portraits/${sessionId}/thumb.png`,
-  //   style: metadata.style,
-  //   createdAt: metadata.createdAt,
-  //   expiresAt: metadata.expiresAt,
-  // }
-  // ─────────────────────────────────────────────────────
+  try {
+    // Determine if we're on the server or client
+    const isServer = typeof window === "undefined"
 
-  // Demo/placeholder mode - return mock data
-  // This allows the page to render and be tested without Cloudflare
-  const now = new Date()
-  const expires = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days
+    if (isServer) {
+      // ─── Server-side: Direct PostgreSQL query ─────────
+      const { getPool } = await import("@lib/db")
+      const { ensurePortraitSessionsTable } = await import("@lib/db/init")
 
-  return {
-    sessionId,
-    status: "completed",
-    portraitUrl: "",      // Empty = shows placeholder in LineArtRenderer
-    portraitSvgUrl: "",
-    originalPhotoUrl: "",
-    thumbnailUrl: "",
-    style: "classic",
-    createdAt: now.toISOString(),
-    expiresAt: expires.toISOString(),
+      await ensurePortraitSessionsTable()
+      const pool = getPool()
+
+      const result = await pool.query(
+        `SELECT
+           id AS "sessionId",
+           status,
+           style,
+           original_url AS "originalUrl",
+           portrait_url AS "portraitUrl",
+           portrait_svg_url AS "portraitSvgUrl",
+           thumbnail_url AS "thumbnailUrl",
+           error_message AS "errorMessage",
+           created_at AS "createdAt",
+           expires_at AS "expiresAt"
+         FROM portrait_sessions
+         WHERE id = $1`,
+        [sessionId]
+      )
+
+      if (result.rows.length === 0) return null
+
+      const session = result.rows[0] as PortraitSession
+
+      // Check expiration
+      if (new Date(session.expiresAt) < new Date()) {
+        await pool.query(
+          `UPDATE portrait_sessions SET status = 'expired' WHERE id = $1`,
+          [sessionId]
+        )
+        session.status = "expired"
+      }
+
+      return session
+    } else {
+      // ─── Client-side: API call ────────────────────────
+      const response = await fetch(`/api/portrait/session/${sessionId}`)
+
+      if (!response.ok) return null
+
+      return await response.json()
+    }
+  } catch (error) {
+    console.error("[Portrait Session] Error fetching session:", error)
+    return null
   }
 }
 
 /**
- * Checks if a portrait session is still valid (not expired).
+ * Checks if a portrait session is still valid (not expired and completed).
  */
 export function isSessionValid(session: PortraitSession): boolean {
   if (session.status === "expired") return false
+  if (session.status === "failed") return false
   return new Date(session.expiresAt) > new Date()
 }

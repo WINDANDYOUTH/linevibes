@@ -24,6 +24,20 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // ─── Portrait item detection ───────────────────────
+  const metadata = (item as any).metadata as Record<string, string> | undefined
+  const isPortraitItem = !!metadata?.portrait_session_id
+  const portraitThumbnail = metadata?.portrait_image_url || null
+  const portraitSessionId = metadata?.portrait_session_id
+
+  // Use portrait image as thumbnail if available, otherwise fall back to product thumbnail
+  const effectiveThumbnail = portraitThumbnail || item.thumbnail
+
+  // Link to portrait result page for portrait items, product page for regular items
+  const itemHref = isPortraitItem && portraitSessionId
+    ? `/portrait/result?sid=${portraitSessionId}`
+    : `/products/${item.product_handle}`
+
   const changeQuantity = async (quantity: number) => {
     setError(null)
     setUpdating(true)
@@ -48,14 +62,14 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
     <Table.Row className="w-full" data-testid="product-row">
       <Table.Cell className="!pl-0 p-4 w-24">
         <LocalizedClientLink
-          href={`/products/${item.product_handle}`}
+          href={itemHref}
           className={clx("flex", {
             "w-16": type === "preview",
             "small:w-24 w-12": type === "full",
           })}
         >
           <Thumbnail
-            thumbnail={item.thumbnail}
+            thumbnail={effectiveThumbnail}
             images={item.variant?.product?.images}
             size="square"
           />

@@ -114,18 +114,27 @@ const CartDropdown = ({
                         ? -1
                         : 1
                     })
-                    .map((item) => (
+                    .map((item) => {
+                      // Detect portrait items and use their generated image as thumbnail
+                      const meta = (item as any).metadata as Record<string, string> | undefined
+                      const isPortrait = !!meta?.portrait_session_id
+                      const effectiveThumb = meta?.portrait_image_url || item.thumbnail
+                      const itemLink = isPortrait && meta?.portrait_session_id
+                        ? `/portrait/result?sid=${meta.portrait_session_id}`
+                        : `/products/${item.product_handle}`
+
+                      return (
                       <div
                         className="grid grid-cols-[122px_1fr] gap-x-4"
                         key={item.id}
                         data-testid="cart-item"
                       >
                         <LocalizedClientLink
-                          href={`/products/${item.product_handle}`}
+                          href={itemLink}
                           className="w-24"
                         >
                           <Thumbnail
-                            thumbnail={item.thumbnail}
+                            thumbnail={effectiveThumb}
                             images={item.variant?.product?.images}
                             size="square"
                           />
@@ -172,7 +181,7 @@ const CartDropdown = ({
                           </DeleteButton>
                         </div>
                       </div>
-                    ))}
+                    )})}
                 </div>
                 <div className="p-4 flex flex-col gap-y-4 text-small-regular">
                   <div className="flex items-center justify-between">
