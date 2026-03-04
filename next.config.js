@@ -46,6 +46,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "uploads.linevibes.com",
+      },
+      {
+        protocol: "https",
+        hostname: "api.together.ai",
+      },
       ...(S3_HOSTNAME && S3_PATHNAME
         ? [
             {
