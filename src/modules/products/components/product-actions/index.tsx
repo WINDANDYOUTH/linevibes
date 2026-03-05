@@ -33,7 +33,7 @@ export default function ProductActions({
   product,
   disabled,
 }: ProductActionsProps) {
-  const { trackAddToCart } = useAnalytics()
+  const { trackAddToCart, trackProductView } = useAnalytics()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -119,8 +119,31 @@ export default function ProductActions({
   }, [selectedVariant])
 
   const actionsRef = useRef<HTMLDivElement>(null)
+  const trackedVariantViewsRef = useRef<Set<string>>(new Set())
 
   const inView = useIntersection(actionsRef, "0px")
+
+  useEffect(() => {
+    if (!selectedVariant?.id) {
+      return
+    }
+
+    if (trackedVariantViewsRef.current.has(selectedVariant.id)) {
+      return
+    }
+
+    trackedVariantViewsRef.current.add(selectedVariant.id)
+
+    trackProductView({
+      id: selectedVariant.id,
+      name: product.title || "Unknown Product",
+      category: product.collection?.title,
+      price: selectedVariant.calculated_price?.calculated_amount || 0,
+      currency:
+        selectedVariant.calculated_price?.currency_code?.toUpperCase() ||
+        "USD",
+    })
+  }, [product.collection?.title, product.title, selectedVariant, trackProductView])
 
   // add the selected variant to the cart
   const handleAddToCart = async () => {

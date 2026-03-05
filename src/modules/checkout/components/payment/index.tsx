@@ -2,6 +2,7 @@
 
 import { RadioGroup } from "@headlessui/react"
 import { isStripeLike, isPaypal, paymentInfoMap } from "@lib/constants"
+import { useAnalytics } from "@lib/analytics/provider"
 import { initiatePaymentSession } from "@lib/data/cart"
 import { CheckCircleSolid, CreditCard } from "@medusajs/icons"
 import { Button, Heading, Text, clx } from "@medusajs/ui"
@@ -21,6 +22,7 @@ const Payment = ({
   cart: any
   availablePaymentMethods: any[]
 }) => {
+  const { trackPaymentInfo } = useAnalytics()
   const activeSession = cart.payment_collection?.payment_sessions?.find(
     (paymentSession: any) => paymentSession.status === "pending"
   )
@@ -87,6 +89,20 @@ const Payment = ({
       }
 
       if (!shouldInputCard) {
+        if (cart?.items?.length) {
+          trackPaymentInfo(
+            selectedPaymentMethod || "unknown",
+            cart.items.map((item: any) => ({
+              id: item.variant_id || item.variant?.id || item.id,
+              name: item.product_title || item.title || "Unknown Product",
+              price: item.unit_price || 0,
+              quantity: item.quantity || 1,
+            })),
+            (cart.currency_code || "USD").toUpperCase(),
+            cart.total || 0
+          )
+        }
+
         return router.push(
           pathname + "?" + createQueryString("step", "review"),
           {
@@ -270,3 +286,6 @@ const Payment = ({
 }
 
 export default Payment
+
+
+

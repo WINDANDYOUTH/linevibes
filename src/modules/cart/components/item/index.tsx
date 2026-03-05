@@ -1,8 +1,9 @@
 "use client"
 
-import { Table, Text, clx } from "@medusajs/ui"
+import { useAnalytics } from "@lib/analytics/provider"
 import { updateLineItem } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
+import { Table, Text, clx } from "@medusajs/ui"
 import CartItemSelect from "@modules/cart/components/cart-item-select"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import DeleteButton from "@modules/common/components/delete-button"
@@ -21,10 +22,11 @@ type ItemProps = {
 }
 
 const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
+  const { trackAddToCart, trackRemoveFromCart } = useAnalytics()
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // ─── Portrait item detection ───────────────────────
+  // Portrait item detection
   const metadata = (item as any).metadata as Record<string, string> | undefined
   const isPortraitItem = !!metadata?.portrait_session_id
   const portraitThumbnail = metadata?.portrait_image_url || null
@@ -38,20 +40,51 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
     ? `/portrait/result?sid=${portraitSessionId}`
     : `/products/${item.product_handle}`
 
+  const getAnalyticsItemBase = () => ({
+    id: item.variant_id || item.variant?.id || item.id,
+    name: item.product_title || item.title || "Unknown Product",
+    price: item.unit_price || 0,
+    currency: (currencyCode || "USD").toUpperCase(),
+  })
+
   const changeQuantity = async (quantity: number) => {
     setError(null)
     setUpdating(true)
+
+    const previousQuantity = item.quantity || 1
 
     await updateLineItem({
       lineId: item.id,
       quantity,
     })
+      .then(() => {
+        if (quantity > previousQuantity) {
+          trackAddToCart({
+            ...getAnalyticsItemBase(),
+            quantity: quantity - previousQuantity,
+          })
+        }
+
+        if (quantity < previousQuantity) {
+          trackRemoveFromCart({
+            ...getAnalyticsItemBase(),
+            quantity: previousQuantity - quantity,
+          })
+        }
+      })
       .catch((err) => {
         setError(err.message)
       })
       .finally(() => {
         setUpdating(false)
       })
+  }
+
+  const handleDeleteTracked = () => {
+    trackRemoveFromCart({
+      ...getAnalyticsItemBase(),
+      quantity: item.quantity || 1,
+    })
   }
 
   // TODO: Update this to grab the actual max inventory
@@ -89,14 +122,17 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
       {type === "full" && (
         <Table.Cell>
           <div className="flex gap-2 items-center w-28">
-            <DeleteButton id={item.id} data-testid="product-delete-button" />
+            <DeleteButton
+              id={item.id}
+              onDeleted={handleDeleteTracked}
+              data-testid="product-delete-button"
+            />
             <CartItemSelect
               value={item.quantity}
               onChange={(value) => changeQuantity(parseInt(value.target.value))}
               className="w-14 h-10 p-4"
               data-testid="product-select-button"
             >
-              {/* TODO: Update this with the v2 way of managing inventory */}
               {Array.from(
                 {
                   length: Math.min(maxQuantity, 10),

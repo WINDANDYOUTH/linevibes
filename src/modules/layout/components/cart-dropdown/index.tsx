@@ -6,6 +6,7 @@ import {
   PopoverPanel,
   Transition,
 } from "@headlessui/react"
+import { useAnalytics } from "@lib/analytics/provider"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
@@ -22,6 +23,7 @@ const CartDropdown = ({
 }: {
   cart?: HttpTypes.StoreCart | null
 }) => {
+  const { trackRemoveFromCart } = useAnalytics()
   const [activeTimer, setActiveTimer] = useState<NodeJS.Timer | undefined>(
     undefined
   )
@@ -175,6 +177,15 @@ const CartDropdown = ({
                           <DeleteButton
                             id={item.id}
                             className="mt-1"
+                            onDeleted={() =>
+                              trackRemoveFromCart({
+                                id: item.variant_id || item.variant?.id || item.id,
+                                name: item.product_title || item.title || "Unknown Product",
+                                price: item.unit_price || 0,
+                                currency: (cartState.currency_code || "USD").toUpperCase(),
+                                quantity: item.quantity || 1,
+                              })
+                            }
                             data-testid="cart-item-remove-button"
                           >
                             Remove
@@ -237,3 +248,5 @@ const CartDropdown = ({
 }
 
 export default CartDropdown
+
+

@@ -1,6 +1,7 @@
 "use client"
 
 import { Radio, RadioGroup } from "@headlessui/react"
+import { useAnalytics } from "@lib/analytics/provider"
 import { setShippingMethod } from "@lib/data/cart"
 import { calculatePriceForShippingOption } from "@lib/data/fulfillment"
 import { convertToLocale } from "@lib/util/money"
@@ -50,6 +51,7 @@ const Shipping: React.FC<ShippingProps> = ({
   cart,
   availableShippingMethods,
 }) => {
+  const { trackShippingInfo } = useAnalytics()
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingPrices, setIsLoadingPrices] = useState(true)
 
@@ -114,6 +116,24 @@ const Shipping: React.FC<ShippingProps> = ({
   }
 
   const handleSubmit = () => {
+    if (cart?.items?.length) {
+      const selectedMethod = availableShippingMethods?.find(
+        (method) => method.id === shippingMethodId
+      )
+
+      trackShippingInfo(
+        selectedMethod?.name || cart.shipping_methods?.at(-1)?.name || "shipping",
+        cart.items.map((item) => ({
+          id: item.variant_id || item.variant?.id || item.id,
+          name: item.product_title || item.title || "Unknown Product",
+          price: item.unit_price || 0,
+          quantity: item.quantity || 1,
+        })),
+        (cart.currency_code || "USD").toUpperCase(),
+        cart.total || 0
+      )
+    }
+
     router.push(pathname + "?step=payment", { scroll: false })
   }
 
@@ -440,3 +460,6 @@ const Shipping: React.FC<ShippingProps> = ({
 }
 
 export default Shipping
+
+
+
