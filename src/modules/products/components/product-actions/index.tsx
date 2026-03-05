@@ -1,6 +1,7 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
+import { useAnalytics } from "@lib/analytics/provider"
 import { useIntersection } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
@@ -9,9 +10,9 @@ import OptionSelect from "@modules/products/components/product-actions/option-se
 import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import ProductPrice from "../product-price"
 import MobileActions from "./mobile-actions"
-import { useRouter } from "next/navigation"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -32,6 +33,7 @@ export default function ProductActions({
   product,
   disabled,
 }: ProductActionsProps) {
+  const { trackAddToCart } = useAnalytics()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -126,13 +128,26 @@ export default function ProductActions({
 
     setIsAdding(true)
 
-    await addToCart({
-      variantId: selectedVariant.id,
-      quantity: 1,
-      countryCode,
-    })
+    try {
+      await addToCart({
+        variantId: selectedVariant.id,
+        quantity: 1,
+        countryCode,
+      })
 
-    setIsAdding(false)
+      trackAddToCart({
+        id: selectedVariant.id,
+        name: product.title || "Unknown Product",
+        category: product.collection?.title,
+        price: selectedVariant.calculated_price?.calculated_amount || 0,
+        currency:
+          selectedVariant.calculated_price?.currency_code?.toUpperCase() ||
+          "USD",
+        quantity: 1,
+      })
+    } finally {
+      setIsAdding(false)
+    }
   }
 
   return (
