@@ -13,6 +13,8 @@ import {
   trackAddPaymentInfo,
   trackPurchase,
   pushToDataLayer,
+  setUserId,
+  trackCustomEvent,
 } from "@lib/analytics/gtm"
 import {
   getSession,
@@ -91,6 +93,10 @@ interface AnalyticsContextValue {
     coupon?: string
   }) => void
   
+  // Custom events
+  trackCustomEvent: (eventName: string, params?: Record<string, unknown>) => void
+  setUserId: (userId: string | null) => void
+
   // Session data for order metadata
   getOrderMetadata: () => Record<string, unknown>
 }
@@ -231,6 +237,14 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
     return getSessionSummaryForOrder()
   }, [])
   
+  const trackCustomEventHandler = useCallback((eventName: string, params?: Record<string, unknown>) => {
+    trackCustomEvent(eventName, params)
+  }, [])
+
+  const setUserIdHandler = useCallback((userId: string | null) => {
+    setUserId(userId)
+  }, [])
+  
   const value: AnalyticsContextValue = {
     trackPageView: trackPageViewHandler,
     trackProductView: trackProductViewHandler,
@@ -242,6 +256,8 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
     trackPaymentInfo: trackPaymentInfoHandler,
     trackPurchase: trackPurchaseHandler,
     getOrderMetadata: getOrderMetadataHandler,
+    trackCustomEvent: trackCustomEventHandler,
+    setUserId: setUserIdHandler,
   }
   
   return (

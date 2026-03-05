@@ -27,6 +27,21 @@ export const trackPageView = (url: string, title?: string) => {
   })
 }
 
+// User ID tracking
+export const setUserId = (userId: string | null) => {
+  pushToDataLayer({
+    user_id: userId,
+  })
+}
+
+// Custom Event tracking
+export const trackCustomEvent = (eventName: string, params?: Record<string, unknown>) => {
+  pushToDataLayer({
+    event: eventName,
+    ...params,
+  })
+}
+
 // E-commerce Events (GA4 Enhanced E-commerce)
 
 // View Item Event
