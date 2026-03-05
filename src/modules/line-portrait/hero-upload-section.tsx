@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getHistory, saveToHistory, type PortraitHistoryEntry } from "@lib/portrait-history"
+import { useAnalytics } from "@lib/analytics/provider"
 
 /* ───────── Generation Status Types ───────── */
 type GenerationStatus = "idle" | "uploading" | "generating" | "completed" | "error"
@@ -98,6 +99,7 @@ function UploadDropZone({
   onFileSelect: (file: File) => void
   isDisabled?: boolean
 }) {
+  const { trackCustomEvent } = useAnalytics()
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
@@ -110,6 +112,7 @@ function UploadDropZone({
     }
     const url = URL.createObjectURL(file)
     setPreview(url)
+    trackCustomEvent("upload_photo_success")
     onFileSelect(file)
   }
 
@@ -126,12 +129,18 @@ function UploadDropZone({
     if (!isDisabled) setIsDragOver(true)
   }
 
+  const handleClick = () => {
+    if (isDisabled) return
+    trackCustomEvent("upload_photo_start")
+    inputRef.current?.click()
+  }
+
   return (
     <div
       onDrop={onDrop}
       onDragOver={onDragOver}
       onDragLeave={() => setIsDragOver(false)}
-      onClick={() => !isDisabled && inputRef.current?.click()}
+      onClick={handleClick}
       className={`
         relative w-full max-w-[480px] mx-auto aspect-[4/5] rounded-2xl border-2 border-dashed
         flex flex-col items-center justify-center gap-4
@@ -326,6 +335,7 @@ const STYLES = [
 
 /* ───────── Main Hero Section ───────── */
 export default function HeroUploadSection() {
+  const { trackCustomEvent } = useAnalytics()
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [selectedStyle, setSelectedStyle] = useState("classic")
   const [genStatus, setGenStatus] = useState<GenerationStatus>("idle")
@@ -341,6 +351,8 @@ export default function HeroUploadSection() {
     try {
       setGenStatus("uploading")
       setErrorMessage(undefined)
+      
+      trackCustomEvent("generate_portrait_start", { style_name: selectedStyle })
 
       // Build FormData
       const formData = new FormData()
@@ -362,6 +374,7 @@ export default function HeroUploadSection() {
       }
 
       setGenStatus("completed")
+      trackCustomEvent("generate_portrait_success", { style_name: selectedStyle })
 
       // Save to history so user can find this portrait later
       saveToHistory({
@@ -380,6 +393,7 @@ export default function HeroUploadSection() {
       console.error("[Generate] Error:", error)
       setGenStatus("error")
       setErrorMessage(error.message || "An unexpected error occurred")
+      trackCustomEvent("generate_portrait_error", { error_message: error.message || "Unknown error" })
     }
   }, [uploadedFile, selectedStyle, router, countryCode])
 

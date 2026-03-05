@@ -1,13 +1,18 @@
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ChevronDown from "@modules/common/icons/chevron-down"
+import { retrieveCustomer } from "@lib/data/customer"
+import { UserAnalyticsSync } from "@lib/analytics/user-sync"
 
-export default function CheckoutLayout({
+export default async function CheckoutLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const customer = await retrieveCustomer()
+
   return (
     <div className="w-full bg-gradient-to-b from-[#FDFBF7] to-[#F5F0E8] relative min-h-screen">
+      <UserAnalyticsSync userId={customer?.id || null} />
       {/* Header */}
       <header className="h-16 bg-white/80 backdrop-blur-md border-b border-[#E8E0D4] sticky top-0 z-50">
         <nav className="flex h-full items-center max-w-[1280px] mx-auto px-6 justify-between">
