@@ -26,7 +26,7 @@ export default async function CheckoutForm({
 
   return (
     <div className="checkout-form-card">
-      <div className="checkout-form-inner">
+      <div className="checkout-form-inner space-y-10 lg:space-y-12">
         {/* Contact & Shipping Address */}
         <div className="checkout-section" data-section="address">
           <Addresses cart={cart} customer={customer} />

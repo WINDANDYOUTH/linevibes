@@ -1,6 +1,7 @@
 import { retrieveCart } from "@lib/data/cart"
 import { retrieveCustomer } from "@lib/data/customer"
 import PaymentWrapper from "@modules/checkout/components/payment-wrapper"
+import { PayPalScriptWrapper } from "@modules/checkout/components/payment-wrapper/paypal-wrapper"
 import CheckoutForm from "@modules/checkout/templates/checkout-form"
 import CheckoutSummary from "@modules/checkout/templates/checkout-summary"
 import ExpressCheckoutWrapper from "@modules/checkout/templates/express-checkout-wrapper"
@@ -23,24 +24,26 @@ export default async function Checkout() {
   const customer = await retrieveCustomer()
 
   return (
-    <div className="checkout-page">
-      <div className="checkout-container">
-        {/* Express Checkout Section */}
-        <ExpressCheckoutWrapper cart={cart} />
+    <PayPalScriptWrapper cart={cart}>
+      <div className="checkout-page">
+        <div className="checkout-container">
+          {/* Express Checkout Section */}
+          <ExpressCheckoutWrapper cart={cart} />
 
-        {/* Main Checkout Content */}
-        <div className="checkout-content">
-          {/* Left Column - Checkout Form */}
-          <div className="checkout-form-section">
-            <PaymentWrapper cart={cart}>
-              <CheckoutForm cart={cart} customer={customer} />
-            </PaymentWrapper>
+          {/* Main Checkout Content */}
+          <div className="checkout-content">
+            {/* Left Column - Checkout Form */}
+            <div className="checkout-form-section">
+              <PaymentWrapper cart={cart}>
+                <CheckoutForm cart={cart} customer={customer} />
+              </PaymentWrapper>
+            </div>
+
+            {/* Right Column - Order Summary */}
+            <CheckoutSummary cart={cart} />
           </div>
-
-          {/* Right Column - Order Summary */}
-          <CheckoutSummary cart={cart} />
         </div>
       </div>
-    </div>
+    </PayPalScriptWrapper>
   )
 }

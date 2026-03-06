@@ -3,7 +3,6 @@
 import React from "react"
 import { HttpTypes } from "@medusajs/types"
 import ExpressCheckout from "@modules/checkout/components/express-checkout"
-import PayPalWrapper from "@modules/checkout/components/payment-wrapper/paypal-wrapper"
 
 type ExpressCheckoutWrapperProps = {
   cart: HttpTypes.StoreCart
@@ -17,11 +16,7 @@ const ExpressCheckoutWrapper: React.FC<ExpressCheckoutWrapperProps> = ({
     return null
   }
 
-  return (
-    <PayPalWrapper cart={cart}>
-      <ExpressCheckout cart={cart} />
-    </PayPalWrapper>
-  )
+  return <ExpressCheckout cart={cart} />
 }
 
 export default ExpressCheckoutWrapper

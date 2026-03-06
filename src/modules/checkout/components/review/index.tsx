@@ -1,14 +1,18 @@
 "use client"
 
+import { getCheckoutPaymentSelectionKey } from "@lib/constants"
 import { Heading, Text, clx } from "@medusajs/ui"
 import PaymentButton from "../payment-button"
 import { useSearchParams } from "next/navigation"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { useEffect, useState } from "react"
 
 const Review = ({ cart }: { cart: any }) => {
   const searchParams = useSearchParams()
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null)
 
   const isOpen = searchParams.get("step") === "review"
+  const paymentSelectionStorageKey = getCheckoutPaymentSelectionKey(cart?.id)
 
   const paidByGiftcard =
     cart?.gift_cards && cart?.gift_cards?.length > 0 && cart?.total === 0
@@ -17,6 +21,16 @@ const Review = ({ cart }: { cart: any }) => {
     cart.shipping_address &&
     cart.shipping_methods.length > 0 &&
     (cart.payment_collection || paidByGiftcard)
+
+  useEffect(() => {
+    if (!paymentSelectionStorageKey || typeof window === "undefined") {
+      return
+    }
+
+    setSelectedPaymentMethod(
+      window.sessionStorage.getItem(paymentSelectionStorageKey)
+    )
+  }, [paymentSelectionStorageKey, isOpen])
 
   return (
     <div className="checkout-section-wrapper">
@@ -30,7 +44,7 @@ const Review = ({ cart }: { cart: any }) => {
             }
           )}
         >
-          <span className="checkout-section-badge flex h-7 w-7 items-center justify-center rounded-full bg-black text-sm text-white">
+          <span className="checkout-section-badge flex h-8 w-8 items-center justify-center rounded-full border border-black bg-white text-sm font-medium text-black">
             4
           </span>
           Review & Place Order
@@ -69,7 +83,11 @@ const Review = ({ cart }: { cart: any }) => {
 
           {/* Payment Button */}
           <div className="payment-button-wrapper">
-            <PaymentButton cart={cart} data-testid="submit-order-button" />
+            <PaymentButton
+              cart={cart}
+              selectedPaymentMethod={selectedPaymentMethod}
+              data-testid="submit-order-button"
+            />
           </div>
 
           {/* Security & Trust */}

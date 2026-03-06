@@ -48,33 +48,6 @@ export default async function CheckoutLayout({
         </nav>
       </header>
 
-      <div className="border-b border-black bg-white">
-        <div className="mx-auto max-w-[1280px] px-6 py-3">
-          <div className="flex items-center justify-center gap-x-2 text-xs sm:gap-x-4 sm:text-sm">
-            <div className="flex items-center gap-x-1 font-medium text-black sm:gap-x-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black text-xs text-white sm:h-6 sm:w-6">
-                1
-              </span>
-              <span className="hidden xs:inline">Information</span>
-            </div>
-            <div className="h-px w-6 bg-black sm:w-8"></div>
-            <div className="flex items-center gap-x-1 text-black/60 sm:gap-x-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full border border-black bg-white text-xs text-black sm:h-6 sm:w-6">
-                2
-              </span>
-              <span className="hidden xs:inline">Shipping</span>
-            </div>
-            <div className="h-px w-6 bg-black sm:w-8"></div>
-            <div className="flex items-center gap-x-1 text-black/60 sm:gap-x-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full border border-black bg-white text-xs text-black sm:h-6 sm:w-6">
-                3
-              </span>
-              <span className="hidden xs:inline">Payment</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <main className="relative" data-testid="checkout-container">
         {children}
       </main>
