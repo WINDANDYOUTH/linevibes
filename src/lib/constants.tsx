@@ -30,6 +30,14 @@ export const paymentInfoMap: Record<
     title: "PayPal",
     icon: <PayPal />,
   },
+  "pp_paypal_paypal:card": {
+    title: "Credit / Debit Card",
+    icon: <CreditCard />,
+  },
+  "pp_paypal_paypal:paypal": {
+    title: "PayPal",
+    icon: <PayPal />,
+  },
   pp_system_default: {
     title: "Manual Payment",
     icon: <CreditCard />,
@@ -47,6 +55,40 @@ export const isStripeLike = (providerId?: string) => {
 export const isPaypal = (providerId?: string) => {
   return providerId?.startsWith("pp_paypal")
 }
+
+export const PAYPAL_CARD_OPTION_SUFFIX = ":card"
+export const PAYPAL_WALLET_OPTION_SUFFIX = ":paypal"
+
+export const getPaypalCardOptionId = (providerId: string) =>
+  `${providerId}${PAYPAL_CARD_OPTION_SUFFIX}`
+
+export const getPaypalWalletOptionId = (providerId: string) =>
+  `${providerId}${PAYPAL_WALLET_OPTION_SUFFIX}`
+
+export const isPaypalCardOption = (providerId?: string) =>
+  providerId?.endsWith(PAYPAL_CARD_OPTION_SUFFIX) ?? false
+
+export const isPaypalWalletOption = (providerId?: string) =>
+  providerId?.endsWith(PAYPAL_WALLET_OPTION_SUFFIX) ?? false
+
+export const getBasePaymentProviderId = (providerId?: string) => {
+  if (!providerId) {
+    return providerId
+  }
+
+  if (
+    providerId.endsWith(PAYPAL_CARD_OPTION_SUFFIX) ||
+    providerId.endsWith(PAYPAL_WALLET_OPTION_SUFFIX)
+  ) {
+    return providerId.replace(/:(card|paypal)$/, "")
+  }
+
+  return providerId
+}
+
+export const getCheckoutPaymentSelectionKey = (cartId?: string) =>
+  cartId ? `checkout-payment-selection:${cartId}` : null
+
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
 }

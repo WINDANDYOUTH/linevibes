@@ -184,7 +184,7 @@ const Shipping: React.FC<ShippingProps> = ({
             }
           )}
         >
-          <span className="checkout-section-badge flex h-7 w-7 items-center justify-center rounded-full bg-black text-sm text-white">
+          <span className="checkout-section-badge flex h-8 w-8 items-center justify-center rounded-full border border-black bg-white text-sm font-medium text-black">
             2
           </span>
           Delivery

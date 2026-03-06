@@ -1,6 +1,6 @@
 "use client"
 
-import { isManual, isStripeLike, isPaypal } from "@lib/constants"
+import { isManual, isPaypal, isPaypalCardOption, isStripeLike } from "@lib/constants"
 import { placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
@@ -12,10 +12,12 @@ import ErrorMessage from "../error-message"
 type PaymentButtonProps = {
   cart: HttpTypes.StoreCart
   "data-testid": string
+  selectedPaymentMethod?: string | null
 }
 
 const PaymentButton: React.FC<PaymentButtonProps> = ({
   cart,
+  selectedPaymentMethod,
   "data-testid": dataTestId,
 }) => {
   const notReady =
@@ -43,6 +45,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
         <PayPalPaymentButton
           notReady={notReady}
           cart={cart}
+          selectedPaymentMethod={selectedPaymentMethod}
           data-testid={dataTestId}
         />
       )
@@ -65,10 +68,12 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
 const PayPalPaymentButton = ({
   cart,
   notReady,
+  selectedPaymentMethod,
   "data-testid": dataTestId,
 }: {
   cart: HttpTypes.StoreCart
   notReady: boolean
+  selectedPaymentMethod?: string | null
   "data-testid"?: string
 }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -79,6 +84,7 @@ const PayPalPaymentButton = ({
   const session = cart.payment_collection?.payment_sessions?.find(
     (s) => s.provider_id.startsWith("pp_paypal") && s.status === "pending"
   )
+  const showingCardFlow = isPaypalCardOption(selectedPaymentMethod || undefined)
 
   const onPaymentCompleted = async () => {
     await placeOrder().catch((err) => {
@@ -127,76 +133,70 @@ const PayPalPaymentButton = ({
     <>
       <div className="flex flex-col gap-4">
         <div className="rounded-lg border border-black bg-white p-4">
-          <p className="mb-4 text-sm text-black/70">
-            Pay directly with your card here, or continue into the PayPal checkout flow.
-          </p>
+          {showingCardFlow ? (
+            <>
+              <p className="mb-4 text-sm text-black/70">
+                Your card will be charged directly through PayPal&apos;s secure card flow.
+              </p>
 
-          <Button
-            onClick={handleCardSubmit}
-            isLoading={submitting}
-            disabled={!cardFieldsForm || submitting}
-            className="w-full bg-black text-white hover:bg-neutral-800"
-          >
-            Pay Now
-          </Button>
+              <Button
+                onClick={handleCardSubmit}
+                isLoading={submitting}
+                disabled={!cardFieldsForm || submitting}
+                className="w-full bg-black text-white hover:bg-neutral-800"
+              >
+                Pay Now
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="mb-3 text-sm text-black/70">
+                You will leave this page briefly to approve the payment with your PayPal account.
+              </p>
 
-          <div className="my-4 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-black/40">
-            <span className="h-px flex-1 bg-black/10" />
-            <span>or</span>
-            <span className="h-px flex-1 bg-black/10" />
-          </div>
+              <div className="paypal-button-container">
+                <PayPalButtons
+                  style={{
+                    layout: "vertical",
+                    shape: "rect",
+                    color: "gold",
+                    label: "paypal",
+                    height: 48,
+                    tagline: false,
+                  }}
+                  disabled={notReady || submitting}
+                  createOrder={async () => {
+                    const orderId = session?.data?.order_id as string
+                    if (!orderId) {
+                      throw new Error("PayPal order ID not found in session")
+                    }
+                    return orderId
+                  }}
+                  onApprove={async () => {
+                    setSubmitting(true)
+                    setErrorMessage(null)
 
-          <p className="mb-3 text-sm font-medium text-black">
-            Proceed to PayPal
-          </p>
-
-          <div className="paypal-button-container">
-            <PayPalButtons
-              style={{
-                layout: "vertical",
-                shape: "rect",
-                color: "gold",
-                label: "paypal",
-                height: 48,
-                tagline: false,
-              }}
-              disabled={notReady || submitting}
-              createOrder={async () => {
-                const orderId = session?.data?.order_id as string
-                if (!orderId) {
-                  throw new Error("PayPal order ID not found in session")
-                }
-                return orderId
-              }}
-              onApprove={async (_data, actions) => {
-                setSubmitting(true)
-                setErrorMessage(null)
-
-                try {
-                  if (actions.order) {
-                    await actions.order.capture()
-                  }
-
-                  await onPaymentCompleted()
-                } catch (err: any) {
-                  setErrorMessage(
-                    err.message || "PayPal payment capture failed."
-                  )
-                } finally {
-                  setSubmitting(false)
-                }
-              }}
-              onError={(err) => {
-                console.error("PayPal error:", err)
-                setSubmitting(false)
-                setErrorMessage("PayPal payment failed. Please try again.")
-              }}
-              onCancel={() => {
-                setSubmitting(false)
-                setErrorMessage("Payment was cancelled.")
-              }}
-            />
-          </div>
+                    try {
+                      await onPaymentCompleted()
+                    } catch (err: any) {
+                      setErrorMessage(err.message || "PayPal payment failed.")
+                    } finally {
+                      setSubmitting(false)
+                    }
+                  }}
+                  onError={(err) => {
+                    console.error("PayPal error:", err)
+                    setSubmitting(false)
+                    setErrorMessage("PayPal payment failed. Please try again.")
+                  }}
+                  onCancel={() => {
+                    setSubmitting(false)
+                    setErrorMessage("Payment was cancelled.")
+                  }}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
       <ErrorMessage
