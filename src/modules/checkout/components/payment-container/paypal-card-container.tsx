@@ -32,7 +32,7 @@ const PayPalCardContainer: React.FC<PaymentContainerProps> = ({
       color: "#1a1a1a",
       "font-family": "Inter, sans-serif",
       "font-size": "15px",
-      "padding": "0.5rem 0",
+      "padding": "1.25rem 0 0.25rem",
     },
     ".valid": { color: "#1d8649" },
     ".invalid": { color: "#d32f2f" },
@@ -69,32 +69,36 @@ const PayPalCardContainer: React.FC<PaymentContainerProps> = ({
           </Text>
 
           <div className="space-y-4">
-            <div className="flex flex-col gap-2">
-              <div className="relative h-14 overflow-hidden rounded-lg border border-black bg-white transition-all focus-within:ring-1 focus-within:ring-black">
-                <label className="absolute left-4 top-2 text-[10px] font-medium uppercase tracking-wider text-black/60">Cardholder Name</label>
-                <PayPalNameField style={style} className="h-full w-full px-4 pb-2 pt-4" />
-              </div>
+            <div className="paypal-card-field">
+              <label className="paypal-card-field__label">Cardholder Name</label>
+              <PayPalNameField
+                style={style}
+                className="paypal-card-field__input"
+              />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <div className="relative flex h-14 items-center overflow-hidden rounded-lg border border-black bg-white transition-all focus-within:ring-1 focus-within:ring-black">
-                <label className="absolute left-4 top-2 z-10 text-[10px] font-medium uppercase tracking-wider text-black/60">Card Number</label>
-                <PayPalNumberField style={style} className="h-full w-full px-4 pb-2 pt-4" />
-              </div>
+            <div className="paypal-card-field">
+              <label className="paypal-card-field__label">Card Number</label>
+              <PayPalNumberField
+                style={style}
+                className="paypal-card-field__input"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <div className="relative h-14 overflow-hidden rounded-lg border border-black bg-white transition-all focus-within:ring-1 focus-within:ring-black">
-                  <label className="absolute left-4 top-2 text-[10px] font-medium uppercase tracking-wider text-black/60">Expiration</label>
-                  <PayPalExpiryField style={style} className="h-full w-full px-4 pb-2 pt-4" />
-                </div>
+              <div className="paypal-card-field">
+                <label className="paypal-card-field__label">Expiration</label>
+                <PayPalExpiryField
+                  style={style}
+                  className="paypal-card-field__input"
+                />
               </div>
-              <div className="flex flex-col gap-2">
-                <div className="relative h-14 overflow-hidden rounded-lg border border-black bg-white transition-all focus-within:ring-1 focus-within:ring-black">
-                  <label className="absolute left-4 top-2 text-[10px] font-medium uppercase tracking-wider text-black/60">CVV</label>
-                  <PayPalCVVField style={style} className="h-full w-full px-4 pb-2 pt-4" />
-                </div>
+              <div className="paypal-card-field">
+                <label className="paypal-card-field__label">CVV</label>
+                <PayPalCVVField
+                  style={style}
+                  className="paypal-card-field__input"
+                />
               </div>
             </div>
 

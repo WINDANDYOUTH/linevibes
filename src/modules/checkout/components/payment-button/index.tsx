@@ -74,7 +74,7 @@ const PayPalPaymentButton = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [{ isPending }] = usePayPalScriptReducer()
-  const { cardFieldsForm, fields } = usePayPalCardFields()
+  const { cardFieldsForm } = usePayPalCardFields()
 
   const session = cart.payment_collection?.payment_sessions?.find(
     (s) => s.provider_id.startsWith("pp_paypal") && s.status === "pending"
@@ -102,13 +102,6 @@ const PayPalPaymentButton = ({
     }
   }
 
-  const isCardValid = Boolean(
-    fields?.NameField?.isValid &&
-      fields?.NumberField?.isValid &&
-      fields?.ExpiryField?.isValid &&
-      fields?.CVVField?.isValid
-  )
-
   if (isPending) {
     return (
       <div className="flex items-center justify-center rounded-lg border border-black bg-white py-4">
@@ -133,28 +126,39 @@ const PayPalPaymentButton = ({
   return (
     <>
       <div className="flex flex-col gap-4">
-        {isCardValid && (
+        <div className="rounded-lg border border-black bg-white p-4">
+          <p className="mb-4 text-sm text-black/70">
+            Pay directly with your card here, or continue into the PayPal checkout flow.
+          </p>
+
           <Button
             onClick={handleCardSubmit}
             isLoading={submitting}
-            disabled={submitting}
+            disabled={!cardFieldsForm || submitting}
             className="w-full bg-black text-white hover:bg-neutral-800"
           >
-            Pay with card
+            Pay Now
           </Button>
-        )}
-        <div className="rounded-lg border border-black bg-white p-4">
-          <p className="mb-4 text-sm text-black/70">
-            You will be redirected within the secure PayPal flow to approve the payment.
+
+          <div className="my-4 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-black/40">
+            <span className="h-px flex-1 bg-black/10" />
+            <span>or</span>
+            <span className="h-px flex-1 bg-black/10" />
+          </div>
+
+          <p className="mb-3 text-sm font-medium text-black">
+            Proceed to PayPal
           </p>
+
           <div className="paypal-button-container">
             <PayPalButtons
               style={{
                 layout: "vertical",
                 shape: "rect",
                 color: "gold",
-                label: "pay",
+                label: "paypal",
                 height: 48,
+                tagline: false,
               }}
               disabled={notReady || submitting}
               createOrder={async () => {
