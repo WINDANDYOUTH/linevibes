@@ -1601,7 +1601,7 @@
 "@medusajs/customer@2.13.1":
   version "2.13.1"
 
-"@medusajs/dashboard@2.13.1":
+"@medusajs/dashboard@^2.13.1", "@medusajs/dashboard@2.13.1":
   version "2.13.1"
   resolved "https://registry.npmjs.org/@medusajs/dashboard/-/dashboard-2.13.1.tgz"
   integrity sha512-NIbr835PENAgqL/+fMadqoryaCvCqZ8oWYSUIQ3A0SK5lnRLzu2MiyBWQe4NvF7vfSbSXwrLT2zSQOLN8X4yMA==
