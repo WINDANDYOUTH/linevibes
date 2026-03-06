@@ -210,6 +210,9 @@ const Payment = ({
 
   const selectedProviderId =
     getBasePaymentProviderId(selectedPaymentMethod) || selectedPaymentMethod
+  const paypalCardFieldsReady =
+    isPaypalCardOption(selectedPaymentMethod) &&
+    activeSession?.provider_id === selectedProviderId
 
   const paymentActionDisabled =
     isInitializingSession ||
@@ -289,11 +292,29 @@ const Payment = ({
                       />
                     ) : isPaypal(paymentMethod.id) &&
                       isPaypalCardOption(paymentMethod.id) ? (
-                      <PayPalCardContainer
-                        paymentProviderId={paymentMethod.id}
-                        selectedPaymentOptionId={selectedPaymentMethod}
-                        paymentInfoMap={paymentInfoMap}
-                      />
+                      paypalCardFieldsReady ? (
+                        <PayPalCardContainer
+                          paymentProviderId={paymentMethod.id}
+                          selectedPaymentOptionId={selectedPaymentMethod}
+                          paymentInfoMap={paymentInfoMap}
+                        />
+                      ) : (
+                        <PaymentContainer
+                          paymentInfoMap={paymentInfoMap}
+                          paymentProviderId={paymentMethod.id}
+                          selectedPaymentOptionId={selectedPaymentMethod}
+                        >
+                          {selectedPaymentMethod === paymentMethod.id && (
+                            <div className="card-fields-inline mt-4 border-t border-black pt-4">
+                              <Text className="text-sm text-black/70">
+                                {isInitializingSession
+                                  ? "Preparing secure card fields..."
+                                  : "Select this option to load secure card fields."}
+                              </Text>
+                            </div>
+                          )}
+                        </PaymentContainer>
+                      )
                     ) : (
                       <PaymentContainer
                         paymentInfoMap={paymentInfoMap}
