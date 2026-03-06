@@ -37,22 +37,22 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
       className={clx(
         "payment-method-card flex flex-col gap-y-2 cursor-pointer py-4 border-2 rounded-xl px-4 transition-all",
         {
-          "border-[#8B4513] bg-[#8B4513]/5": isSelected,
-          "border-[#E8E0D4] hover:border-[#D4C4B0]": !isSelected,
+          "border-black bg-black/[0.03]": isSelected,
+          "border-black/20 hover:border-black": !isSelected,
         }
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-x-4">
           <Radio checked={isSelected} />
-          <Text className="text-[#3D3229] font-medium">
+          <Text className="font-medium text-black">
             {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
           </Text>
           {isManual(paymentProviderId) && isDevelopment && (
             <PaymentTest className="hidden small:block" />
           )}
         </div>
-        <span className="flex items-center gap-2 text-[#6B5B4F]">
+        <span className="flex items-center gap-2 text-black/70">
           {paymentInfoMap[paymentProviderId]?.icon}
         </span>
       </div>
@@ -88,15 +88,15 @@ export const StripeCardContainer = ({
         base: {
           fontFamily: "Inter, sans-serif",
           fontSize: "15px",
-          color: "#3D3229",
+          color: "#111111",
           "::placeholder": {
-            color: "#6B5B4F",
+            color: "#525252",
           },
         },
       },
       classes: {
-        base: "pt-3 pb-3 block w-full h-12 px-4 mt-0 bg-white border-2 border-[#E8E0D4] rounded-lg appearance-none focus:outline-none focus:border-[#8B4513] hover:border-[#D4C4B0] transition-all duration-200",
-        focus: "border-[#8B4513]",
+        base: "mt-0 block h-12 w-full appearance-none rounded-lg border-2 border-black/20 bg-white px-4 pb-3 pt-3 transition-all duration-200 hover:border-black focus:outline-none focus:border-black",
+        focus: "border-black",
       },
     }
   }, [])
@@ -110,9 +110,9 @@ export const StripeCardContainer = ({
     >
       {isSelected &&
         (stripeReady ? (
-          <div className="card-fields-inline mt-4 pt-4 border-t border-[#E8E0D4]">
+          <div className="card-fields-inline mt-4 border-t border-black pt-4">
             <div className="mb-1">
-              <Text className="text-sm font-medium text-[#3D3229] mb-2">
+              <Text className="mb-2 text-sm font-medium text-black">
                 Card Information
               </Text>
               <div className="flex items-center gap-2 mb-3">
@@ -145,8 +145,8 @@ export const StripeCardContainer = ({
                 setCardComplete(e.complete)
               }}
             />
-            <div className="flex items-center gap-2 mt-3 text-xs text-[#6B5B4F]">
-              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mt-3 flex items-center gap-2 text-xs text-black/70">
+              <svg className="h-4 w-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
               <span>Your card information is encrypted and secure</span>

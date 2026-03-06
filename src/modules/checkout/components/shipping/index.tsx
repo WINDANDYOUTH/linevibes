@@ -177,14 +177,14 @@ const Shipping: React.FC<ShippingProps> = ({
         <Heading
           level="h2"
           className={clx(
-            "flex flex-row text-xl font-semibold gap-x-3 items-center text-[#3D3229]",
+            "flex flex-row items-center gap-x-3 text-xl font-semibold text-black",
             {
               "opacity-50 pointer-events-none select-none":
                 !isOpen && cart.shipping_methods?.length === 0,
             }
           )}
         >
-          <span className="checkout-section-badge flex items-center justify-center w-7 h-7 rounded-full bg-[#8B4513] text-white text-sm">
+          <span className="checkout-section-badge flex h-7 w-7 items-center justify-center rounded-full bg-black text-sm text-white">
             2
           </span>
           Delivery
@@ -199,7 +199,7 @@ const Shipping: React.FC<ShippingProps> = ({
             <Text>
               <button
                 onClick={handleEdit}
-                className="text-[#8B4513] hover:text-[#A0522D] font-medium text-sm"
+                className="text-sm font-medium text-black transition-opacity hover:opacity-70"
                 data-testid="edit-delivery-button"
               >
                 Edit
@@ -211,10 +211,10 @@ const Shipping: React.FC<ShippingProps> = ({
         <>
           <div className="grid">
             <div className="flex flex-col mb-4">
-              <span className="font-medium text-[#3D3229]">
+              <span className="font-medium text-black">
                 Shipping method
               </span>
-              <span className="text-sm text-[#6B5B4F]">
+              <span className="text-sm text-black/70">
                 How would you like your order delivered?
               </span>
             </div>
@@ -239,9 +239,9 @@ const Shipping: React.FC<ShippingProps> = ({
                       className={clx(
                         "shipping-option flex items-center justify-between cursor-pointer py-4 border-2 rounded-xl px-4 transition-all",
                         {
-                          "border-[#8B4513] bg-[#8B4513]/5":
+                          "border-black bg-black/[0.03]":
                             showPickupOptions === PICKUP_OPTION_ON,
-                          "border-[#E8E0D4] hover:border-[#D4C4B0]":
+                          "border-black/20 hover:border-black":
                             showPickupOptions !== PICKUP_OPTION_ON,
                         }
                       )}
@@ -251,15 +251,15 @@ const Shipping: React.FC<ShippingProps> = ({
                           checked={showPickupOptions === PICKUP_OPTION_ON}
                         />
                         <div>
-                          <span className="text-[#3D3229] font-medium">
+                          <span className="font-medium text-black">
                             Pick up your order
                           </span>
-                          <p className="text-sm text-[#6B5B4F]">
+                          <p className="text-sm text-black/70">
                             Collect from our store
                           </p>
                         </div>
                       </div>
-                      <span className="text-[#8B4513] font-semibold">
+                      <span className="font-semibold text-black">
                         Free
                       </span>
                     </Radio>
@@ -289,9 +289,9 @@ const Shipping: React.FC<ShippingProps> = ({
                         className={clx(
                           "shipping-option flex items-center justify-between cursor-pointer py-4 border-2 rounded-xl px-4 transition-all",
                           {
-                            "border-[#8B4513] bg-[#8B4513]/5":
+                            "border-black bg-black/[0.03]":
                               option.id === shippingMethodId,
-                            "border-[#E8E0D4] hover:border-[#D4C4B0]":
+                            "border-black/20 hover:border-black":
                               option.id !== shippingMethodId,
                             "opacity-50 cursor-not-allowed": isDisabled,
                           }
@@ -302,20 +302,20 @@ const Shipping: React.FC<ShippingProps> = ({
                             checked={option.id === shippingMethodId}
                           />
                           <div>
-                            <span className="text-[#3D3229] font-medium">
+                            <span className="font-medium text-black">
                               {option.name}
                             </span>
                             {option.data?.estimated_days && (
-                              <p className="text-sm text-[#6B5B4F]">
+                              <p className="text-sm text-black/70">
                                 {option.data.estimated_days} business days
                               </p>
                             )}
                           </div>
                         </div>
-                        <span className="text-[#3D3229] font-semibold">
+                        <span className="font-semibold text-black">
                           {option.price_type === "flat" ? (
                             option.amount === 0 ? (
-                              <span className="text-[#8B4513]">Free</span>
+                              <span className="text-black">Free</span>
                             ) : (
                               convertToLocale({
                                 amount: option.amount!,
@@ -344,10 +344,10 @@ const Shipping: React.FC<ShippingProps> = ({
           {showPickupOptions === PICKUP_OPTION_ON && (
             <div className="grid mt-4">
               <div className="flex flex-col mb-4">
-                <span className="font-medium text-[#3D3229]">
+                <span className="font-medium text-black">
                   Store location
                 </span>
-                <span className="text-sm text-[#6B5B4F]">
+                <span className="text-sm text-black/70">
                   Choose a store near you
                 </span>
               </div>
@@ -372,9 +372,9 @@ const Shipping: React.FC<ShippingProps> = ({
                           className={clx(
                             "shipping-option flex items-center justify-between cursor-pointer py-4 border-2 rounded-xl px-4 transition-all",
                             {
-                              "border-[#8B4513] bg-[#8B4513]/5":
+                              "border-black bg-black/[0.03]":
                                 option.id === shippingMethodId,
-                              "border-[#E8E0D4] hover:border-[#D4C4B0]":
+                              "border-black/20 hover:border-black":
                                 option.id !== shippingMethodId,
                               "opacity-50 cursor-not-allowed":
                                 option.insufficient_inventory,
@@ -386,10 +386,10 @@ const Shipping: React.FC<ShippingProps> = ({
                               checked={option.id === shippingMethodId}
                             />
                             <div className="flex flex-col">
-                              <span className="text-[#3D3229] font-medium">
+                              <span className="font-medium text-black">
                                 {option.name}
                               </span>
-                              <span className="text-sm text-[#6B5B4F]">
+                              <span className="text-sm text-black/70">
                                 {formatAddress(
                                   option.service_zone?.fulfillment_set?.location
                                     ?.address
@@ -397,7 +397,7 @@ const Shipping: React.FC<ShippingProps> = ({
                               </span>
                             </div>
                           </div>
-                          <span className="text-[#8B4513] font-semibold">
+                          <span className="font-semibold text-black">
                             {option.amount === 0
                               ? "Free"
                               : convertToLocale({
@@ -421,7 +421,7 @@ const Shipping: React.FC<ShippingProps> = ({
             />
             <Button
               size="large"
-              className="mt-4 w-full bg-gradient-to-r from-[#8B4513] to-[#D2691E] hover:from-[#A0522D] hover:to-[#E07020] text-white"
+              className="mt-4 w-full bg-black text-white hover:bg-neutral-800"
               onClick={handleSubmit}
               isLoading={isLoading}
               disabled={!cart.shipping_methods?.[0]}
@@ -436,13 +436,13 @@ const Shipping: React.FC<ShippingProps> = ({
           <div className="text-small-regular">
             {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
               <div className="flex flex-col">
-                <Text className="txt-medium-plus text-[#3D3229] mb-1 font-medium">
+                <Text className="txt-medium-plus mb-1 font-medium text-black">
                   Method
                 </Text>
-                <Text className="txt-medium text-[#6B5B4F]">
+                <Text className="txt-medium text-black/70">
                   {cart.shipping_methods!.at(-1)!.name} •{" "}
                   {cart.shipping_methods!.at(-1)!.amount === 0 ? (
-                    <span className="text-[#8B4513]">Free</span>
+                    <span className="text-black">Free</span>
                   ) : (
                     convertToLocale({
                       amount: cart.shipping_methods!.at(-1)!.amount!,

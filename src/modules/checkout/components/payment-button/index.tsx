@@ -5,7 +5,7 @@ import { placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
-import { PayPalButtons, usePayPalScriptReducer, usePayPalCardFields } from "@paypal/react-paypal-js"
+import { PayPalButtons, usePayPalCardFields, usePayPalScriptReducer } from "@paypal/react-paypal-js"
 import React, { useState } from "react"
 import ErrorMessage from "../error-message"
 
@@ -25,7 +25,9 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     !cart.email ||
     (cart.shipping_methods?.length ?? 0) < 1
 
-  const paymentSession = cart.payment_collection?.payment_sessions?.[0]
+  const paymentSession = cart.payment_collection?.payment_sessions?.find(
+    (session) => session.status === "pending"
+  )
 
   switch (true) {
     case isStripeLike(paymentSession?.provider_id):
@@ -75,7 +77,7 @@ const PayPalPaymentButton = ({
   const { cardFieldsForm, fields } = usePayPalCardFields()
 
   const session = cart.payment_collection?.payment_sessions?.find(
-    (s) => s.status === "pending"
+    (s) => s.provider_id.startsWith("pp_paypal") && s.status === "pending"
   )
 
   const onPaymentCompleted = async () => {
@@ -85,33 +87,33 @@ const PayPalPaymentButton = ({
   }
 
   const handleCardSubmit = async () => {
-    if (!cardFieldsForm) return
-    
+    if (!cardFieldsForm) {
+      return
+    }
+
     setSubmitting(true)
     setErrorMessage(null)
-    
+
     try {
       await cardFieldsForm.submit()
-      // onApprove in wrapper will handle placeOrder
-      // But we can also do it here if needed, but wrapper is cleaner
     } catch (err: any) {
-      setErrorMessage(err.message || "Payment compilation failed")
       setSubmitting(false)
+      setErrorMessage(err.message || "PayPal card payment failed")
     }
   }
 
-  const isCardValid = 
-    // fields?.NameField?.isValid &&
-    // fields?.NumberField?.isValid &&
-    // fields?.ExpiryField?.isValid &&
-    // fields?.CVVField?.isValid
-    false
+  const isCardValid = Boolean(
+    fields?.NameField?.isValid &&
+      fields?.NumberField?.isValid &&
+      fields?.ExpiryField?.isValid &&
+      fields?.CVVField?.isValid
+  )
 
   if (isPending) {
     return (
-      <div className="flex items-center justify-center py-4 bg-[#F5F0E8] rounded-lg">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#8B4513]"></div>
-        <span className="ml-3 text-[#6B5B4F]">Loading PayPal...</span>
+      <div className="flex items-center justify-center rounded-lg border border-black bg-white py-4">
+        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-black"></div>
+        <span className="ml-3 text-black/70">Loading PayPal...</span>
       </div>
     )
   }
@@ -130,58 +132,67 @@ const PayPalPaymentButton = ({
 
   return (
     <>
-      {/* If Card Fields are used/valid, show explicit Pay button */}
       <div className="flex flex-col gap-4">
         {isCardValid && (
-           <Button
+          <Button
             onClick={handleCardSubmit}
             isLoading={submitting}
             disabled={submitting}
-            className="w-full bg-gradient-to-r from-[#8B4513] to-[#D2691E] hover:from-[#A0522D] hover:to-[#E07020] text-white font-semibold py-4 text-base uppercase tracking-wide shadow-lg hover:shadow-xl transition-all"
+            className="w-full bg-black text-white hover:bg-neutral-800"
           >
-            Pay with Card
+            Pay with card
           </Button>
         )}
+        <div className="rounded-lg border border-black bg-white p-4">
+          <p className="mb-4 text-sm text-black/70">
+            You will be redirected within the secure PayPal flow to approve the payment.
+          </p>
+          <div className="paypal-button-container">
+            <PayPalButtons
+              style={{
+                layout: "vertical",
+                shape: "rect",
+                color: "gold",
+                label: "pay",
+                height: 48,
+              }}
+              disabled={notReady || submitting}
+              createOrder={async () => {
+                const orderId = session?.data?.order_id as string
+                if (!orderId) {
+                  throw new Error("PayPal order ID not found in session")
+                }
+                return orderId
+              }}
+              onApprove={async (_data, actions) => {
+                setSubmitting(true)
+                setErrorMessage(null)
 
-        <div className={isCardValid ? "opacity-50 pointer-events-none" : ""}>
-            <div className="relative mb-4 text-center">
-               <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                 <div className="w-full border-t border-gray-300" />
-               </div>
-               <div className="relative flex justify-center">
-                 <span className="bg-[#FDFBF7] px-2 text-sm text-gray-500">Or pay with PayPal</span>
-               </div>
-            </div>
-
-            <div className="paypal-button-container">
-              <PayPalButtons
-                style={{
-                  layout: "vertical",
-                  shape: "rect",
-                  color: "gold",
-                  label: "pay",
-                  height: 48,
-                }}
-                disabled={notReady || submitting}
-                createOrder={async () => {
-                  const orderId = session?.data?.order_id as string
-                  if (!orderId) {
-                    throw new Error("PayPal order ID not found in session")
+                try {
+                  if (actions.order) {
+                    await actions.order.capture()
                   }
-                  return orderId
-                }}
-                onApprove={async (data) => {
+
                   await onPaymentCompleted()
-                }}
-                onError={(err) => {
-                  console.error("PayPal error:", err)
-                  setErrorMessage("PayPal payment failed. Please try again.")
-                }}
-                onCancel={() => {
-                  setErrorMessage("Payment was cancelled.")
-                }}
-              />
-            </div>
+                } catch (err: any) {
+                  setErrorMessage(
+                    err.message || "PayPal payment capture failed."
+                  )
+                } finally {
+                  setSubmitting(false)
+                }
+              }}
+              onError={(err) => {
+                console.error("PayPal error:", err)
+                setSubmitting(false)
+                setErrorMessage("PayPal payment failed. Please try again.")
+              }}
+              onCancel={() => {
+                setSubmitting(false)
+                setErrorMessage("Payment was cancelled.")
+              }}
+            />
+          </div>
         </div>
       </div>
       <ErrorMessage
@@ -288,7 +299,7 @@ const StripePaymentButton = ({
         size="large"
         isLoading={submitting}
         data-testid={dataTestId}
-        className="w-full bg-gradient-to-r from-[#8B4513] to-[#D2691E] hover:from-[#A0522D] hover:to-[#E07020] text-white font-semibold py-4 text-base uppercase tracking-wide shadow-lg hover:shadow-xl transition-all"
+        className="w-full bg-black py-4 text-base font-semibold uppercase tracking-wide text-white transition-all hover:bg-neutral-800"
       >
         Place Order
       </Button>
@@ -328,7 +339,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
         onClick={handlePayment}
         size="large"
         data-testid="submit-order-button"
-        className="w-full bg-gradient-to-r from-[#8B4513] to-[#D2691E] hover:from-[#A0522D] hover:to-[#E07020] text-white font-semibold py-4 text-base uppercase tracking-wide shadow-lg hover:shadow-xl transition-all"
+        className="w-full bg-black py-4 text-base font-semibold uppercase tracking-wide text-white transition-all hover:bg-neutral-800"
       >
         Place Order
       </Button>

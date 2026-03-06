@@ -11,7 +11,6 @@ import PaymentContainer, {
   StripeCardContainer,
 } from "@modules/checkout/components/payment-container"
 import PayPalCardContainer from "@modules/checkout/components/payment-container/paypal-card-container"
-import Divider from "@modules/common/components/divider"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 
@@ -31,6 +30,7 @@ const Payment = ({
   const [error, setError] = useState<string | null>(null)
   const [cardBrand, setCardBrand] = useState<string | null>(null)
   const [cardComplete, setCardComplete] = useState(false)
+  const [isInitializingSession, setIsInitializingSession] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
     activeSession?.provider_id ?? ""
   )
@@ -42,12 +42,34 @@ const Payment = ({
   const isOpen = searchParams.get("step") === "payment"
 
   const setPaymentMethod = async (method: string) => {
+    if (isInitializingSession) {
+      return
+    }
+
     setError(null)
     setSelectedPaymentMethod(method)
-    if (isStripeLike(method) || isPaypal(method)) {
+
+    const requiresSession = isStripeLike(method) || isPaypal(method)
+
+    if (!requiresSession) {
+      return
+    }
+
+    if (activeSession?.provider_id === method) {
+      return
+    }
+
+    setIsInitializingSession(true)
+
+    try {
       await initiatePaymentSession(cart, {
         provider_id: method,
       })
+      router.refresh()
+    } catch (err: any) {
+      setError(err.message || "Failed to initialize payment session")
+    } finally {
+      setIsInitializingSession(false)
     }
   }
 
@@ -76,40 +98,43 @@ const Payment = ({
   const handleSubmit = async () => {
     setIsLoading(true)
     try {
-      const shouldInputCard =
-        isStripeLike(selectedPaymentMethod) && !activeSession
-
-      const checkActiveSession =
+      const requiresSession =
+        isStripeLike(selectedPaymentMethod) || isPaypal(selectedPaymentMethod)
+      const hasMatchingSession =
         activeSession?.provider_id === selectedPaymentMethod
 
-      if (!checkActiveSession) {
-        await initiatePaymentSession(cart, {
-          provider_id: selectedPaymentMethod,
-        })
+      if (isInitializingSession) {
+        setError("Payment session is still being prepared. Please wait.")
+        return
       }
 
-      if (!shouldInputCard) {
-        if (cart?.items?.length) {
-          trackPaymentInfo(
-            selectedPaymentMethod || "unknown",
-            cart.items.map((item: any) => ({
-              id: item.variant_id || item.variant?.id || item.id,
-              name: item.product_title || item.title || "Unknown Product",
-              price: item.unit_price || 0,
-              quantity: item.quantity || 1,
-            })),
-            (cart.currency_code || "USD").toUpperCase(),
-            cart.total || 0
-          )
-        }
+      if (requiresSession && !hasMatchingSession) {
+        setError(
+          "Payment session is not ready yet. Please wait a moment and try again."
+        )
+        return
+      }
 
-        return router.push(
-          pathname + "?" + createQueryString("step", "review"),
-          {
-            scroll: false,
-          }
+      if (cart?.items?.length) {
+        trackPaymentInfo(
+          selectedPaymentMethod || "unknown",
+          cart.items.map((item: any) => ({
+            id: item.variant_id || item.variant?.id || item.id,
+            name: item.product_title || item.title || "Unknown Product",
+            price: item.unit_price || 0,
+            quantity: item.quantity || 1,
+          })),
+          (cart.currency_code || "USD").toUpperCase(),
+          cart.total || 0
         )
       }
+
+      return router.push(
+        pathname + "?" + createQueryString("step", "review"),
+        {
+          scroll: false,
+        }
+      )
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -118,8 +143,21 @@ const Payment = ({
   }
 
   useEffect(() => {
+    if (activeSession?.provider_id) {
+      setSelectedPaymentMethod(activeSession.provider_id)
+    }
+  }, [activeSession?.provider_id])
+
+  useEffect(() => {
     setError(null)
   }, [isOpen])
+
+  const paymentActionDisabled =
+    isInitializingSession ||
+    (isStripeLike(selectedPaymentMethod) && !cardComplete) ||
+    (!selectedPaymentMethod && !paidByGiftcard) ||
+    ((isStripeLike(selectedPaymentMethod) || isPaypal(selectedPaymentMethod)) &&
+      activeSession?.provider_id !== selectedPaymentMethod)
 
   return (
     <div className="checkout-section-wrapper">
@@ -127,14 +165,14 @@ const Payment = ({
         <Heading
           level="h2"
           className={clx(
-            "flex flex-row text-xl font-semibold gap-x-3 items-center text-[#3D3229]",
+            "flex flex-row items-center gap-x-3 text-xl font-semibold text-black",
             {
               "opacity-50 pointer-events-none select-none":
                 !isOpen && !paymentReady,
             }
           )}
         >
-          <span className="checkout-section-badge flex items-center justify-center w-7 h-7 rounded-full bg-[#8B4513] text-white text-sm">
+          <span className="checkout-section-badge flex h-7 w-7 items-center justify-center rounded-full bg-black text-sm text-white">
             3
           </span>
           Payment
@@ -144,7 +182,7 @@ const Payment = ({
           <Text>
             <button
               onClick={handleEdit}
-              className="text-[#8B4513] hover:text-[#A0522D] font-medium text-sm"
+              className="text-sm font-medium text-black transition-opacity hover:opacity-70"
               data-testid="edit-payment-button"
             >
               Edit
@@ -156,9 +194,12 @@ const Payment = ({
         <div className={isOpen ? "block" : "hidden"}>
           {!paidByGiftcard && availablePaymentMethods?.length && (
             <>
-              <p className="text-sm text-[#6B5B4F] mb-4">
-                All transactions are secure and encrypted.
-              </p>
+              <div className="mb-4 flex items-center gap-2 text-sm text-black/70">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <p>All transactions are secure and encrypted.</p>
+              </div>
               <RadioGroup
                 value={selectedPaymentMethod}
                 onChange={(value: string) => setPaymentMethod(value)}
@@ -176,11 +217,11 @@ const Payment = ({
                         setCardComplete={setCardComplete}
                       />
                     ) : isPaypal(paymentMethod.id) ? (
-                       <PayPalCardContainer
+                      <PayPalCardContainer
                         paymentProviderId={paymentMethod.id}
                         selectedPaymentOptionId={selectedPaymentMethod}
                         paymentInfoMap={paymentInfoMap}
-                       />
+                      />
                     ) : (
                       <PaymentContainer
                         paymentInfoMap={paymentInfoMap}
@@ -196,11 +237,11 @@ const Payment = ({
 
           {paidByGiftcard && (
             <div className="flex flex-col w-1/3">
-              <Text className="txt-medium-plus text-[#3D3229] mb-1">
+              <Text className="txt-medium-plus mb-1 text-black">
                 Payment method
               </Text>
               <Text
-                className="txt-medium text-[#6B5B4F]"
+                className="txt-medium text-black/70"
                 data-testid="payment-method-summary"
               >
                 Gift card
@@ -215,18 +256,17 @@ const Payment = ({
 
           <Button
             size="large"
-            className="mt-6 w-full bg-gradient-to-r from-[#8B4513] to-[#D2691E] hover:from-[#A0522D] hover:to-[#E07020] text-white"
+            className="mt-6 w-full bg-black text-white hover:bg-neutral-800"
             onClick={handleSubmit}
-            isLoading={isLoading}
-            disabled={
-              (isStripeLike(selectedPaymentMethod) && !cardComplete) ||
-              (!selectedPaymentMethod && !paidByGiftcard)
-            }
+            isLoading={isLoading || isInitializingSession}
+            disabled={paymentActionDisabled}
             data-testid="submit-payment-button"
           >
-            {!activeSession && isStripeLike(selectedPaymentMethod)
-              ? "Enter card details"
-              : "Continue to review"}
+            {isInitializingSession
+              ? "Preparing payment method..."
+              : !activeSession && isStripeLike(selectedPaymentMethod)
+                ? "Enter card details"
+                : "Continue to review"}
           </Button>
         </div>
 
@@ -234,11 +274,11 @@ const Payment = ({
           {cart && paymentReady && activeSession ? (
             <div className="flex items-start gap-x-1 w-full">
               <div className="flex flex-col w-1/3">
-                <Text className="txt-medium-plus text-[#3D3229] mb-1">
+                <Text className="txt-medium-plus mb-1 text-black">
                   Payment method
                 </Text>
                 <Text
-                  className="txt-medium text-[#6B5B4F]"
+                  className="txt-medium text-black/70"
                   data-testid="payment-method-summary"
                 >
                   {paymentInfoMap[activeSession?.provider_id]?.title ||
@@ -246,14 +286,14 @@ const Payment = ({
                 </Text>
               </div>
               <div className="flex flex-col w-1/3">
-                <Text className="txt-medium-plus text-[#3D3229] mb-1">
+                <Text className="txt-medium-plus mb-1 text-black">
                   Payment details
                 </Text>
                 <div
-                  className="flex gap-2 txt-medium text-[#6B5B4F] items-center"
+                  className="txt-medium flex items-center gap-2 text-black/70"
                   data-testid="payment-details-summary"
                 >
-                  <div className="flex items-center h-7 w-fit p-2 bg-[#F5F0E8] rounded">
+                  <div className="flex h-7 w-fit items-center rounded border border-black bg-white p-2">
                     {paymentInfoMap[selectedPaymentMethod]?.icon || (
                       <CreditCard />
                     )}
@@ -268,11 +308,11 @@ const Payment = ({
             </div>
           ) : paidByGiftcard ? (
             <div className="flex flex-col w-1/3">
-              <Text className="txt-medium-plus text-[#3D3229] mb-1">
+                <Text className="txt-medium-plus mb-1 text-black">
                 Payment method
               </Text>
               <Text
-                className="txt-medium text-[#6B5B4F]"
+                className="txt-medium text-black/70"
                 data-testid="payment-method-summary"
               >
                 Gift card

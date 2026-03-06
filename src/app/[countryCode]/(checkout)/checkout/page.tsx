@@ -9,8 +9,8 @@ import { notFound } from "next/navigation"
 import "../../../../styles/checkout.css"
 
 export const metadata: Metadata = {
-  title: "Checkout | Better Knitwear",
-  description: "Complete your purchase of premium knitwear",
+  title: "Checkout | LineVibes",
+  description: "Complete your LineVibes order",
 }
 
 export default async function Checkout() {

@@ -43,9 +43,9 @@ const Addresses = ({
       <div className="flex flex-row items-center justify-between mb-6">
         <Heading
           level="h2"
-          className="flex flex-row text-xl font-semibold gap-x-3 items-center text-[#3D3229]"
+          className="flex flex-row items-center gap-x-3 text-xl font-semibold text-black"
         >
-          <span className="checkout-section-badge flex items-center justify-center w-7 h-7 rounded-full bg-[#8B4513] text-white text-sm">
+          <span className="checkout-section-badge flex h-7 w-7 items-center justify-center rounded-full bg-black text-sm text-white">
             1
           </span>
           Contact & Shipping
@@ -55,7 +55,7 @@ const Addresses = ({
           <Text>
             <button
               onClick={handleEdit}
-              className="text-[#8B4513] hover:text-[#A0522D] font-medium text-sm"
+              className="text-sm font-medium text-black transition-opacity hover:opacity-70"
               data-testid="edit-address-button"
             >
               Edit
@@ -77,7 +77,7 @@ const Addresses = ({
               <div>
                 <Heading
                   level="h2"
-                  className="text-lg font-semibold gap-x-4 pb-4 pt-6 text-[#3D3229]"
+                  className="gap-x-4 pb-4 pt-6 text-lg font-semibold text-black"
                 >
                   Billing address
                 </Heading>
@@ -86,7 +86,7 @@ const Addresses = ({
               </div>
             )}
             <SubmitButton 
-              className="mt-6 w-full bg-gradient-to-r from-[#8B4513] to-[#D2691E] hover:from-[#A0522D] hover:to-[#E07020] text-white" 
+              className="mt-6 w-full bg-black text-white hover:bg-neutral-800" 
               data-testid="submit-address-button"
             >
               Continue to delivery
@@ -104,22 +104,22 @@ const Addresses = ({
                     className="flex flex-col w-full sm:w-1/3 mb-4 sm:mb-0"
                     data-testid="shipping-address-summary"
                   >
-                    <Text className="txt-medium-plus text-[#3D3229] mb-1 font-medium">
+                    <Text className="txt-medium-plus mb-1 font-medium text-black">
                       Shipping Address
                     </Text>
-                    <Text className="txt-medium text-[#6B5B4F]">
+                    <Text className="txt-medium text-black/70">
                       {cart.shipping_address.first_name}{" "}
                       {cart.shipping_address.last_name}
                     </Text>
-                    <Text className="txt-medium text-[#6B5B4F]">
+                    <Text className="txt-medium text-black/70">
                       {cart.shipping_address.address_1}{" "}
                       {cart.shipping_address.address_2}
                     </Text>
-                    <Text className="txt-medium text-[#6B5B4F]">
+                    <Text className="txt-medium text-black/70">
                       {cart.shipping_address.postal_code},{" "}
                       {cart.shipping_address.city}
                     </Text>
-                    <Text className="txt-medium text-[#6B5B4F]">
+                    <Text className="txt-medium text-black/70">
                       {cart.shipping_address.country_code?.toUpperCase()}
                     </Text>
                   </div>
@@ -128,13 +128,13 @@ const Addresses = ({
                     className="flex flex-col w-full sm:w-1/3 mb-4 sm:mb-0"
                     data-testid="shipping-contact-summary"
                   >
-                    <Text className="txt-medium-plus text-[#3D3229] mb-1 font-medium">
+                    <Text className="txt-medium-plus mb-1 font-medium text-black">
                       Contact
                     </Text>
-                    <Text className="txt-medium text-[#6B5B4F]">
+                    <Text className="txt-medium text-black/70">
                       {cart.shipping_address.phone}
                     </Text>
-                    <Text className="txt-medium text-[#6B5B4F]">
+                    <Text className="txt-medium text-black/70">
                       {cart.email}
                     </Text>
                   </div>
@@ -143,29 +143,29 @@ const Addresses = ({
                     className="flex flex-col w-full sm:w-1/3"
                     data-testid="billing-address-summary"
                   >
-                    <Text className="txt-medium-plus text-[#3D3229] mb-1 font-medium">
+                    <Text className="txt-medium-plus mb-1 font-medium text-black">
                       Billing Address
                     </Text>
 
                     {sameAsBilling ? (
-                      <Text className="txt-medium text-[#6B5B4F]">
+                      <Text className="txt-medium text-black/70">
                         Same as shipping address
                       </Text>
                     ) : (
                       <>
-                        <Text className="txt-medium text-[#6B5B4F]">
+                        <Text className="txt-medium text-black/70">
                           {cart.billing_address?.first_name}{" "}
                           {cart.billing_address?.last_name}
                         </Text>
-                        <Text className="txt-medium text-[#6B5B4F]">
+                        <Text className="txt-medium text-black/70">
                           {cart.billing_address?.address_1}{" "}
                           {cart.billing_address?.address_2}
                         </Text>
-                        <Text className="txt-medium text-[#6B5B4F]">
+                        <Text className="txt-medium text-black/70">
                           {cart.billing_address?.postal_code},{" "}
                           {cart.billing_address?.city}
                         </Text>
-                        <Text className="txt-medium text-[#6B5B4F]">
+                        <Text className="txt-medium text-black/70">
                           {cart.billing_address?.country_code?.toUpperCase()}
                         </Text>
                       </>

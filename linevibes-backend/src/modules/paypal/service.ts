@@ -50,6 +50,46 @@ type InjectedDependencies = {
   logger: Logger
 }
 
+const ZERO_DECIMAL_CURRENCIES = new Set([
+  "bif",
+  "clp",
+  "djf",
+  "gnf",
+  "jpy",
+  "kmf",
+  "krw",
+  "mga",
+  "pyg",
+  "rwf",
+  "ugx",
+  "vnd",
+  "vuv",
+  "xaf",
+  "xof",
+  "xpf",
+])
+
+const formatPayPalAmount = (
+  amount: BigNumber | number | string,
+  currencyCode: string
+) => {
+  const normalizedCurrency = currencyCode.toLowerCase()
+  const numericAmount = Number(amount)
+
+  if (!Number.isFinite(numericAmount)) {
+    throw new MedusaError(
+      MedusaError.Types.INVALID_DATA,
+      `Invalid PayPal amount: ${amount}`
+    )
+  }
+
+  if (ZERO_DECIMAL_CURRENCIES.has(normalizedCurrency)) {
+    return Math.round(numericAmount).toString()
+  }
+
+  return numericAmount.toFixed(2)
+}
+
 class PayPalPaymentProviderService extends AbstractPaymentProvider<Options> {
   static identifier = "paypal"
 
@@ -118,7 +158,7 @@ class PayPalPaymentProviderService extends AbstractPaymentProvider<Options> {
           {
             amount: {
               currencyCode: currency_code.toUpperCase(),
-              value: amount.toString(),
+              value: formatPayPalAmount(amount, currency_code),
             },
             description: "Order payment",
             customId: input.data?.session_id as string | undefined,
@@ -163,9 +203,14 @@ class PayPalPaymentProviderService extends AbstractPaymentProvider<Options> {
       }
     } catch (error: any) {
       this.logger_.error("PayPal initiatePayment error:", error)
+      const details =
+        error?.result?.message ||
+        error?.result?.error_description ||
+        error?.message ||
+        error
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
-        `Failed to initiate PayPal payment: ${error.result?.message || error.message || error}`
+        `Failed to initiate PayPal payment: ${details}`
       )
     }
   }
@@ -181,6 +226,26 @@ class PayPalPaymentProviderService extends AbstractPaymentProvider<Options> {
           MedusaError.Types.INVALID_DATA,
           "PayPal order ID is required for authorization"
         )
+      }
+
+      const currentOrder = await this.ordersController_.getOrder({
+        id: orderId,
+      })
+
+      const currentOrderResult = currentOrder.result
+
+      if (currentOrderResult?.status === "COMPLETED") {
+        const existingCapture =
+          currentOrderResult.purchaseUnits?.[0]?.payments?.captures?.[0]
+
+        return {
+          status: "captured",
+          data: {
+            ...input.data,
+            capture_id: existingCapture?.id,
+            status: currentOrderResult.status,
+          },
+        }
       }
 
       // Check if autoCapture is enabled
@@ -225,9 +290,14 @@ class PayPalPaymentProviderService extends AbstractPaymentProvider<Options> {
       }
     } catch (error: any) {
       this.logger_.error("PayPal authorizePayment error:", error)
+      const details =
+        error?.result?.message ||
+        error?.result?.error_description ||
+        error?.message ||
+        error
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
-        `Failed to authorize PayPal payment: ${error.result?.message || error.message || error}`
+        `Failed to authorize PayPal payment: ${details}`
       )
     }
   }
@@ -267,9 +337,14 @@ class PayPalPaymentProviderService extends AbstractPaymentProvider<Options> {
       }
     } catch (error: any) {
       this.logger_.error("PayPal capturePayment error:", error)
+      const details =
+        error?.result?.message ||
+        error?.result?.error_description ||
+        error?.message ||
+        error
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
-        `Failed to capture PayPal payment: ${error.result?.message || error.message || error}`
+        `Failed to capture PayPal payment: ${details}`
       )
     }
   }
@@ -297,9 +372,14 @@ class PayPalPaymentProviderService extends AbstractPaymentProvider<Options> {
       }
     } catch (error: any) {
       this.logger_.error("PayPal cancelPayment error:", error)
+      const details =
+        error?.result?.message ||
+        error?.result?.error_description ||
+        error?.message ||
+        error
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
-        `Failed to cancel PayPal payment: ${error.result?.message || error.message || error}`
+        `Failed to cancel PayPal payment: ${details}`
       )
     }
   }
@@ -340,9 +420,14 @@ class PayPalPaymentProviderService extends AbstractPaymentProvider<Options> {
       }
     } catch (error: any) {
       this.logger_.error("PayPal refundPayment error:", error)
+      const details =
+        error?.result?.message ||
+        error?.result?.error_description ||
+        error?.message ||
+        error
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
-        `Failed to refund PayPal payment: ${error.result?.message || error.message || error}`
+        `Failed to refund PayPal payment: ${details}`
       )
     }
   }
@@ -375,9 +460,14 @@ class PayPalPaymentProviderService extends AbstractPaymentProvider<Options> {
       }
     } catch (error: any) {
       this.logger_.error("PayPal retrievePayment error:", error)
+      const details =
+        error?.result?.message ||
+        error?.result?.error_description ||
+        error?.message ||
+        error
       throw new MedusaError(
         MedusaError.Types.UNEXPECTED_STATE,
-        `Failed to retrieve PayPal payment: ${error.result?.message || error.message || error}`
+        `Failed to retrieve PayPal payment: ${details}`
       )
     }
   }

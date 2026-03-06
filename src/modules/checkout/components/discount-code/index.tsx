@@ -147,7 +147,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
             {!isOpen && (
                <button
                 onClick={() => setIsOpen(true)}
-                className="text-sm text-[#8B4513] hover:text-[#A0522D] font-medium mt-2 text-left"
+                className="mt-2 text-left text-sm font-medium text-black transition-opacity hover:opacity-70"
               >
                 + Add another code
               </button>

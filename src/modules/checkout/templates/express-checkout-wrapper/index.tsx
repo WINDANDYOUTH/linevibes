@@ -18,7 +18,7 @@ const ExpressCheckoutWrapper: React.FC<ExpressCheckoutWrapperProps> = ({
   }
 
   return (
-    <PayPalWrapper>
+    <PayPalWrapper cart={cart}>
       <ExpressCheckout cart={cart} />
     </PayPalWrapper>
   )
