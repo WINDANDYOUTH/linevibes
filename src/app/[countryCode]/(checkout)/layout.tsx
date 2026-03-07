@@ -28,7 +28,7 @@ export default async function CheckoutLayout({
 
           <LocalizedClientLink
             href="/"
-            className="text-xl font-semibold tracking-[0.18em] text-black transition-opacity hover:opacity-70"
+            className="txt-compact-xlarge-plus uppercase font-bold tracking-widest font-mono text-stone-900 transition-opacity hover:opacity-70"
             data-testid="store-link"
           >
             LineVibes
