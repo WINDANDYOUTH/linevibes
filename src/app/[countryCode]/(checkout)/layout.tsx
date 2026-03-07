@@ -82,7 +82,7 @@ export default async function CheckoutLayout({
           </div>
 
           <div className="mt-4 text-center text-xs text-black/50">
-            © {new Date().getFullYear()} LineVibes. All rights reserved.
+            {`© ${new Date().getFullYear()} LineVibes. All rights reserved.`}
           </div>
         </div>
       </footer>

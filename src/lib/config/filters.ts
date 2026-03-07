@@ -1,78 +1,76 @@
-// Filter configuration for BetterKnitwear
-// These filters are designed to be user-friendly and avoid overwhelming complexity
+// Filter configuration for the LineVibes storefront
+// These filters are designed to stay broad and easy to scan
 
 export type FilterOption = {
   value: string
   label: string
-  count?: number // Optional: show how many products match
+  count?: number
 }
 
 export type FilterGroup = {
   id: string
   title: string
-  type: "single" | "multiple" // single = radio, multiple = checkbox
+  type: "single" | "multiple"
   options: FilterOption[]
-  collapsed?: boolean // Whether to show collapsed by default
+  collapsed?: boolean
 }
 
-// Tag-based filters - these map to product tags in Medusa
 export const FILTER_GROUPS: FilterGroup[] = [
   {
-    id: "style",
-    title: "Style",
+    id: "category",
+    title: "Category",
     type: "multiple",
     options: [
-      { value: "crewneck", label: "Crewneck" },
-      { value: "v-neck", label: "V-Neck" },
-      { value: "half-zip", label: "Half Zip" },
-      { value: "full-zip", label: "Full Zip" },
-      { value: "cardigan", label: "Cardigan" },
-      { value: "polo-knit", label: "Polo Knit" },
+      { value: "line-art", label: "Line Art" },
+      { value: "portraits", label: "Portraits" },
+      { value: "blueprints", label: "Blueprints" },
+      { value: "wall-decor", label: "Wall Decor" },
+      { value: "giftable", label: "Giftable" },
     ],
   },
   {
-    id: "warmth",
-    title: "Warmth Level",
+    id: "format",
+    title: "Format",
     type: "multiple",
     options: [
-      { value: "light", label: "Light" },
-      { value: "medium", label: "Medium" },
-      { value: "warm", label: "Warm" },
-      { value: "extra-warm", label: "Extra Warm" },
+      { value: "digital", label: "Digital" },
+      { value: "print", label: "Print" },
+      { value: "framed", label: "Framed" },
+      { value: "canvas", label: "Canvas" },
     ],
   },
   {
-    id: "material",
-    title: "Material",
+    id: "room",
+    title: "Room",
     type: "multiple",
     options: [
-      { value: "merino-wool", label: "Merino Wool" },
-      { value: "lambswool", label: "Lambswool" },
-      { value: "wool-blend", label: "Wool Blend" },
-      { value: "cotton-blend", label: "Cotton Blend" },
-      { value: "cashmere-blend", label: "Cashmere Blend" },
+      { value: "living-room", label: "Living Room" },
+      { value: "bedroom", label: "Bedroom" },
+      { value: "office", label: "Office" },
+      { value: "studio", label: "Studio" },
     ],
   },
   {
-    id: "gauge",
-    title: "Gauge / Weight",
-    type: "multiple",
-    collapsed: true, // Less commonly used, collapse by default
-    options: [
-      { value: "fine-gauge", label: "Fine Gauge" },
-      { value: "mid-gauge", label: "Mid Gauge" },
-      { value: "chunky", label: "Chunky" },
-    ],
-  },
-  {
-    id: "season",
-    title: "Season",
+    id: "orientation",
+    title: "Orientation",
     type: "multiple",
     collapsed: true,
     options: [
-      { value: "fall", label: "Fall" },
-      { value: "winter", label: "Winter" },
-      { value: "transitional", label: "Transitional" },
+      { value: "portrait", label: "Portrait" },
+      { value: "landscape", label: "Landscape" },
+      { value: "square", label: "Square" },
+    ],
+  },
+  {
+    id: "collection",
+    title: "Collection",
+    type: "multiple",
+    collapsed: true,
+    options: [
+      { value: "signature", label: "Signature" },
+      { value: "minimal", label: "Minimal" },
+      { value: "architectural", label: "Architectural" },
+      { value: "occasion", label: "Occasion" },
     ],
   },
   {
@@ -80,63 +78,56 @@ export const FILTER_GROUPS: FilterGroup[] = [
     title: "Color",
     type: "multiple",
     options: [
-      { value: "navy", label: "Navy" },
-      { value: "charcoal", label: "Charcoal" },
-      { value: "burgundy", label: "Burgundy" },
-      { value: "forest-green", label: "Forest Green" },
-      { value: "cream", label: "Cream" },
-      { value: "camel", label: "Camel" },
-      { value: "grey", label: "Grey" },
       { value: "black", label: "Black" },
+      { value: "white", label: "White" },
+      { value: "natural", label: "Natural" },
+      { value: "oak", label: "Oak" },
+      { value: "walnut", label: "Walnut" },
+      { value: "blue", label: "Blue" },
+      { value: "green", label: "Green" },
     ],
   },
 ]
 
-// Helper to get a filter group by ID
 export const getFilterGroup = (id: string): FilterGroup | undefined => {
   return FILTER_GROUPS.find((group) => group.id === id)
 }
 
-// Helper to get all filter IDs
 export const getAllFilterIds = (): string[] => {
   return FILTER_GROUPS.map((group) => group.id)
 }
 
-// Parse filter query params from URL
 export type FilterState = Record<string, string[]>
 
 export const parseFilterParams = (searchParams: URLSearchParams): FilterState => {
   const filters: FilterState = {}
-  
+
   FILTER_GROUPS.forEach((group) => {
     const values = searchParams.get(group.id)
     if (values) {
       filters[group.id] = values.split(",").filter(Boolean)
     }
   })
-  
+
   return filters
 }
 
-// Serialize filter state to query string
 export const serializeFilters = (filters: FilterState): string => {
   const params = new URLSearchParams()
-  
+
   Object.entries(filters).forEach(([key, values]) => {
     if (values && values.length > 0) {
       params.set(key, values.join(","))
     }
   })
-  
+
   return params.toString()
 }
 
-// Check if any filters are active
 export const hasActiveFilters = (filters: FilterState): boolean => {
   return Object.values(filters).some((values) => values && values.length > 0)
 }
 
-// Get count of active filters
 export const getActiveFilterCount = (filters: FilterState): number => {
   return Object.values(filters).reduce((count, values) => count + (values?.length || 0), 0)
 }

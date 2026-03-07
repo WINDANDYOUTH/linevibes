@@ -4,8 +4,8 @@ import { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "404",
-  description: "Something went wrong",
+  title: "404 | LineVibes",
+  description: "The requested LineVibes page could not be found.",
 }
 
 export default function NotFound() {

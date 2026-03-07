@@ -22,7 +22,6 @@ const StoreTemplate = ({
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
 
-  // Count active filters for display
   const activeFilterCount = Object.values(filters).reduce(
     (count, values) => count + (values?.length || 0),
     0
@@ -33,30 +32,23 @@ const StoreTemplate = ({
       className="flex flex-col small:flex-row small:items-start py-6 content-container"
       data-testid="category-container"
     >
-      {/* Sidebar with filters */}
       <RefinementList sortBy={sort} />
 
-      {/* Main Product Area */}
       <div className="w-full">
-        {/* Page Header */}
         <div className="mb-8">
-          <h1 
-            className="text-2xl font-semibold text-stone-900"
-            data-testid="store-page-title"
-          >
-            Shop Knitwear
+          <h1 className="text-2xl font-semibold text-stone-900" data-testid="store-page-title">
+            Shop LineVibes
           </h1>
           <p className="text-stone-500 mt-1">
-            Premium wool sweaters & knits
+            Design-led pieces with clean aesthetics and lasting quality
             {activeFilterCount > 0 && (
               <span className="text-amber-700 ml-2">
-                • {activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""} applied
+                {`(${activeFilterCount} filter${activeFilterCount > 1 ? "s" : ""} applied)`}
               </span>
             )}
           </p>
         </div>
 
-        {/* Product Grid */}
         <Suspense fallback={<SkeletonProductGrid />}>
           <PaginatedProducts
             sortBy={sort}

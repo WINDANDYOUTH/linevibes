@@ -13,7 +13,7 @@ export function getPool(): Pool {
     const connectionString =
       process.env.PORTRAIT_DATABASE_URL ||
       process.env.DATABASE_URL ||
-      "postgresql://postgres:postgres123@localhost:5432/betterknitwear"
+      "postgresql://postgres:postgres123@localhost:5432/linevibes"
 
     pool = new Pool({
       connectionString,

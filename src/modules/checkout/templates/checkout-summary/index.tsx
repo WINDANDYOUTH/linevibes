@@ -164,7 +164,7 @@ const CheckoutSummary = ({ cart }: { cart: HttpTypes.StoreCart }) => {
         <div>
           <p className="checkout-guarantee-title">30-Day Quality Guarantee</p>
           <p className="checkout-guarantee-text">
-            Not satisfied with your knitwear? Return it within 30 days for a full refund.
+            If something is wrong with your LineVibes order, contact support within 30 days for help.
           </p>
         </div>
       </div>

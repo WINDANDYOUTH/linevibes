@@ -6,8 +6,8 @@ import { AnalyticsProvider } from "@lib/analytics/provider"
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
-  title: "LineVibes | Personalized Plotter Art",
-  description: "Custom machine-drawn artwork and personalized blueprints.",
+  title: "Personalized Plotter Art | LineVibes",
+  description: "Discover LineVibes and explore custom machine-drawn artwork and personalized blueprints.",
 }
 
 export default function RootLayout(props: { children: React.ReactNode }) {
