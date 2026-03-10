@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect } from "react"
+
 import type {
   GeneratorActions,
   GeneratorComputed,
@@ -24,9 +26,20 @@ export default function GeneratorWorkspace({
   computed,
   styles,
 }: GeneratorWorkspaceProps) {
+  useEffect(() => {
+    const root = document.documentElement
+    const isWorkspaceActive = !!state.aiInput.sourceImageUrl
+
+    root.classList.toggle("pet-portrait-workspace-active", isWorkspaceActive)
+
+    return () => {
+      root.classList.remove("pet-portrait-workspace-active")
+    }
+  }, [state.aiInput.sourceImageUrl])
+
   return (
     <section id="generator" className="bg-white py-20 md:py-28">
-      <div className="content-container">
+      <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-5 lg:px-6 xl:px-8">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-stone-500">
             Create Your Portrait
@@ -42,6 +55,7 @@ export default function GeneratorWorkspace({
         </div>
 
         <GeneratorWorkspaceLayout
+          hasStartedEditing={!!state.aiInput.sourceImageUrl}
           preview={
             <PreviewPanel
               sourceImageUrl={state.aiInput.sourceImageUrl}

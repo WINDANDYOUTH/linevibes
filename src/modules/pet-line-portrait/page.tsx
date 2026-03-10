@@ -286,7 +286,27 @@ function SectionIntro({
 
 function PageHeader() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [workspaceActive, setWorkspaceActive] = useState(false)
   const headerRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    const root = document.documentElement
+    const syncWorkspaceState = () => {
+      setWorkspaceActive(root.classList.contains("pet-portrait-workspace-active"))
+    }
+
+    syncWorkspaceState()
+
+    const observer = new MutationObserver(() => {
+      syncWorkspaceState()
+    })
+
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] })
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
 
   useEffect(() => {
     const header = headerRef.current
@@ -297,7 +317,11 @@ function PageHeader() {
 
     const root = document.documentElement
     const syncHeaderHeight = () => {
-      root.style.setProperty("--pet-portrait-header-height", `${header.offsetHeight}px`)
+      const hideMobileHeader = workspaceActive && window.innerWidth < 768
+      root.style.setProperty(
+        "--pet-portrait-header-height",
+        hideMobileHeader ? "0px" : `${header.offsetHeight}px`
+      )
       root.style.setProperty("--pet-portrait-preview-gap", window.innerWidth >= 1280 ? "24px" : "12px")
     }
 
@@ -316,12 +340,14 @@ function PageHeader() {
       root.style.removeProperty("--pet-portrait-header-height")
       root.style.removeProperty("--pet-portrait-preview-gap")
     }
-  }, [])
+  }, [workspaceActive])
 
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-40 border-b border-stone-200/80 bg-[#f6f1e8]/90 backdrop-blur"
+      className={`sticky top-0 z-40 border-b border-stone-200/80 bg-[#f6f1e8]/90 backdrop-blur transition-transform duration-300 ${
+        workspaceActive ? "-translate-y-full md:translate-y-0" : "translate-y-0"
+      }`}
     >
       <div className="content-container">
         <div className="flex items-center justify-between gap-6 py-4">

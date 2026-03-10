@@ -760,12 +760,12 @@ export default function ImageUploadCropper({
       ) : null}
 
       {isCropModalOpen ? (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
-          <div className="flex max-h-[92vh] w-full max-w-[1160px] flex-col overflow-hidden rounded-[32px] border border-stone-200 bg-white shadow-[0_35px_120px_rgba(0,0,0,0.28)]">
-            <div className="flex items-center justify-between border-b border-stone-200 px-6 py-5 sm:px-8">
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 p-2 sm:p-4 backdrop-blur-sm">
+          <div className="flex h-[96svh] w-[calc(100vw-16px)] max-w-[1240px] flex-col overflow-hidden rounded-[28px] border border-stone-200 bg-white shadow-[0_35px_120px_rgba(0,0,0,0.28)] sm:max-h-[92vh] sm:h-auto sm:w-full sm:rounded-[32px]">
+            <div className="flex items-start justify-between gap-4 border-b border-stone-200 px-4 py-4 sm:px-6 sm:py-5">
               <div>
-                <h3 className="text-2xl font-semibold text-stone-950">Crop your image</h3>
-                <p className="mt-1 text-sm text-stone-500">
+                <h3 className="text-xl font-semibold text-stone-950 sm:text-2xl">Crop your image</h3>
+                <p className="mt-1 max-w-[32ch] text-sm text-stone-500">
                   Use 4:5 for the most predictable preview framing. Freeform and other ratios will change the AI input crop.
                 </p>
               </div>
@@ -779,11 +779,11 @@ export default function ImageUploadCropper({
               </button>
             </div>
 
-            <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[minmax(0,1fr)_320px]">
-              <div className="min-h-[420px] border-b border-stone-200 bg-[#111111] p-4 lg:border-b-0 lg:border-r lg:p-6">
+            <div className="grid min-h-0 flex-1 grid-rows-[minmax(300px,40svh)_minmax(300px,1fr)] gap-0 lg:grid-cols-[minmax(0,1fr)_320px] lg:grid-rows-none">
+              <div className="min-h-[300px] border-b border-stone-200 bg-[#111111] p-3 sm:min-h-[360px] sm:p-4 lg:border-b-0 lg:border-r lg:p-6">
                 <div
                   ref={stageRef}
-                  className="relative h-full min-h-[360px] w-full overflow-hidden rounded-[24px] bg-black"
+                  className="relative h-full min-h-[274px] w-full overflow-hidden rounded-[20px] bg-black sm:min-h-[320px] sm:rounded-[24px]"
                   onPointerMove={handleStagePointerMove}
                   onPointerUp={handleStagePointerUp}
                   onPointerCancel={handleStagePointerUp}
@@ -906,7 +906,7 @@ export default function ImageUploadCropper({
                 </div>
               </div>
 
-              <div className="flex min-h-0 flex-col gap-6 overflow-y-auto bg-[#fcfbf8] p-5 sm:p-6">
+              <div className="flex min-h-0 flex-col gap-5 overflow-y-auto bg-[#fcfbf8] p-4 sm:p-5 lg:p-6">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-400">
                     Aspect Ratio
@@ -993,7 +993,7 @@ export default function ImageUploadCropper({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-stone-200 px-6 py-5 sm:px-8">
+            <div className="flex shrink-0 items-center justify-end gap-3 border-t border-stone-200 bg-white px-4 py-4 sm:px-6 sm:py-5">
               <button
                 type="button"
                 onClick={closeModal}
