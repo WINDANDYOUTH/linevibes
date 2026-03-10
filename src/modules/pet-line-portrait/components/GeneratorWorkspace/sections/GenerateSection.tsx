@@ -22,14 +22,14 @@ export default function GenerateSection({
     : "Generate Preview"
 
   return (
-    <div className="rounded-[30px] border border-stone-200 bg-stone-950 p-6 text-white">
+    <div className="rounded-[24px] border border-stone-950 bg-stone-950 p-5 text-white xl:rounded-[30px] xl:border-stone-200 xl:p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-300">
             Generate Action
           </p>
-          <h3 className="mt-2 text-2xl font-semibold">Create Preview</h3>
-          <p className="mt-3 text-sm leading-7 text-stone-300">
+          <h3 className="mt-2 text-xl font-semibold xl:text-2xl">Create Preview</h3>
+          <p className="mt-3 text-sm leading-6 text-stone-300 xl:leading-7">
             Generation only uses the cropped image and the selected style.
           </p>
         </div>
@@ -40,10 +40,10 @@ export default function GenerateSection({
         type="button"
         onClick={onGenerate}
         disabled={!canGenerate || isGenerating}
-        className={`mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-sm font-semibold transition ${
-          !canGenerate || isGenerating
-            ? "cursor-not-allowed bg-white/20 text-stone-300"
-            : "bg-white text-stone-950 hover:bg-stone-100"
+        className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-sm font-semibold transition xl:mt-6 ${
+            !canGenerate || isGenerating
+              ? "cursor-not-allowed bg-white/20 text-stone-300"
+              : "bg-white text-stone-950 hover:bg-stone-100"
         }`}
       >
         {label}

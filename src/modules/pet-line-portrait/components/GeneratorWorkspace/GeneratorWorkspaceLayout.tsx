@@ -14,7 +14,9 @@ export default function GeneratorWorkspaceLayout({
   return (
     <div
       className={`mt-6 grid gap-4 xl:mt-12 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)] xl:gap-6 ${
-        hasStartedEditing ? "pt-[calc(var(--pet-portrait-mobile-preview-height,252px)+12px)] xl:pt-0" : ""
+        hasStartedEditing
+          ? "pt-[calc(var(--pet-portrait-mobile-preview-height,520px)+8px)] xl:pt-0"
+          : ""
       }`}
     >
       <div
@@ -31,9 +33,11 @@ export default function GeneratorWorkspaceLayout({
       >
         {preview}
       </div>
-      <div className="min-w-0 space-y-6">
-        {configurator}
-        {purchaseBar}
+      <div className="min-w-0">
+        <div className="relative z-40 rounded-[28px] border border-stone-200 bg-white/98 p-3 shadow-[0_18px_40px_rgba(28,25,23,0.12)] backdrop-blur xl:rounded-none xl:border-0 xl:bg-transparent xl:p-0 xl:shadow-none xl:backdrop-blur-none">
+          {configurator}
+        </div>
+        <div className="hidden xl:block xl:pt-6">{purchaseBar}</div>
       </div>
     </div>
   )

@@ -22,11 +22,11 @@ function frameClasses(frameOption: FrameOption) {
 function sizeMaxWidth(sizeOption: SizeOption) {
   switch (sizeOption) {
     case "small":
-      return "max-w-[220px] sm:max-w-[280px] xl:max-w-[320px]"
+      return "max-w-[290px] sm:max-w-[280px] xl:max-w-[320px]"
     case "large":
-      return "max-w-[300px] sm:max-w-[400px] xl:max-w-[520px]"
+      return "max-w-[420px] sm:max-w-[400px] xl:max-w-[520px]"
     default:
-      return "max-w-[260px] sm:max-w-[340px] xl:max-w-[420px]"
+      return "max-w-[360px] sm:max-w-[340px] xl:max-w-[420px]"
   }
 }
 
@@ -91,8 +91,8 @@ export default function ArtworkPreview({
   const showFrame = productType === "print" && frameOption !== "none"
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-stone-300 bg-white p-2.5 sm:p-3 xl:rounded-[30px] xl:p-5">
-      <div className="relative flex min-h-0 flex-1 overflow-hidden rounded-[20px] bg-[#fcfbf8] p-2 sm:p-3 xl:rounded-[28px] xl:p-6">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-stone-300 bg-white p-1.5 sm:p-3 xl:rounded-[30px] xl:p-5">
+      <div className="relative flex min-h-0 flex-1 overflow-hidden rounded-[20px] bg-[#fcfbf8] p-1 sm:p-3 xl:rounded-[28px] xl:p-6">
         <div className="absolute inset-0 opacity-70">
           <div
             className="h-full w-full"

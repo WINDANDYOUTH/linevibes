@@ -10,18 +10,18 @@ export default function TextSection({
   onChange: (value: string) => void
 }) {
   return (
-    <div className="rounded-[30px] border border-stone-200 bg-[#faf8f3] p-6">
+    <div className="rounded-[24px] bg-white p-1 xl:rounded-[30px] xl:border xl:border-stone-200 xl:bg-[#faf8f3] xl:p-6">
       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-400">
         Text Option
       </p>
-      <h3 className="mt-2 text-2xl font-semibold text-stone-950">
+      <h3 className="mt-2 text-xl font-semibold text-stone-950 xl:text-2xl">
         Add Optional Text
       </h3>
-      <p className="mt-3 text-sm leading-7 text-stone-600">
+      <p className="mt-3 text-sm leading-6 text-stone-600 xl:leading-7">
         This text appears at the bottom of the preview and final product presentation only.
       </p>
 
-      <div className="mt-6">
+      <div className="mt-5 xl:mt-6">
         <TextInputField value={value} maxLength={maxLength} onChange={onChange} />
       </div>
     </div>

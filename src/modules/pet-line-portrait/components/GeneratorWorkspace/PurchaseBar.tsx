@@ -31,8 +31,8 @@ export default function PurchaseBar({
       : "Generating Required"
 
   return (
-    <div className="sticky bottom-3 z-20 overflow-hidden rounded-[20px] border border-stone-200 bg-stone-950 px-4 py-3 text-white shadow-[0_14px_32px_rgba(28,25,23,0.14)] md:px-5">
-      <div className="flex items-center justify-between gap-3">
+    <div className="overflow-hidden rounded-[22px] border border-stone-950 bg-stone-950 px-4 py-3 text-white shadow-[0_14px_32px_rgba(28,25,23,0.14)] xl:sticky xl:bottom-3 xl:z-20 xl:border-stone-200 xl:px-4 xl:py-3 md:px-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-300">
             Price
@@ -46,7 +46,7 @@ export default function PurchaseBar({
           type="button"
           onClick={onAddToCart}
           disabled={!canAddToCart || cartStatus === "adding"}
-          className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition md:min-w-[172px] ${
+          className={`inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition sm:w-auto md:min-w-[172px] ${
             !canAddToCart || cartStatus === "adding"
               ? "cursor-not-allowed bg-white/20 text-stone-300"
               : "bg-white text-stone-950 hover:bg-stone-100"

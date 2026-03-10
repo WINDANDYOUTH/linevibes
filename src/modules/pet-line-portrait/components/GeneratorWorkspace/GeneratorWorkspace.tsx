@@ -76,6 +76,16 @@ export default function GeneratorWorkspace({
               actions={actions}
               computed={computed}
               styles={styles}
+              purchaseBar={
+                <PurchaseBar
+                  price={computed.price}
+                  canAddToCart={computed.canAddToCart}
+                  cartStatus={state.cartStatus}
+                  generationStatus={state.generationStatus}
+                  cartError={state.cartError}
+                  onAddToCart={actions.addToCart}
+                />
+              }
             />
           }
           purchaseBar={
