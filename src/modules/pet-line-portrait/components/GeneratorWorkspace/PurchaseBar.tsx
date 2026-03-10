@@ -31,40 +31,33 @@ export default function PurchaseBar({
       : "Generating Required"
 
   return (
-    <div className="sticky bottom-4 rounded-[30px] border border-stone-200 bg-stone-950 p-6 text-white shadow-[0_20px_60px_rgba(28,25,23,0.15)]">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-stone-300">
+    <div className="sticky bottom-3 z-20 overflow-hidden rounded-[20px] border border-stone-200 bg-stone-950 px-4 py-3 text-white shadow-[0_14px_32px_rgba(28,25,23,0.14)] md:px-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-300">
             Price
           </p>
-          <div className="mt-2 text-3xl font-semibold">{price.formatted}</div>
-          <p className="mt-3 text-sm leading-7 text-stone-300">
-            Price updates instantly as you switch product configuration.
-          </p>
+          <div className="mt-1 truncate text-xl font-semibold leading-none md:text-2xl">
+            {price.formatted}
+          </div>
         </div>
+
+        <button
+          type="button"
+          onClick={onAddToCart}
+          disabled={!canAddToCart || cartStatus === "adding"}
+          className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition md:min-w-[172px] ${
+            !canAddToCart || cartStatus === "adding"
+              ? "cursor-not-allowed bg-white/20 text-stone-300"
+              : "bg-white text-stone-950 hover:bg-stone-100"
+          }`}
+        >
+          {buttonLabel}
+          <ArrowRight className="h-4 w-4" />
+        </button>
       </div>
 
-      <button
-        type="button"
-        onClick={onAddToCart}
-        disabled={!canAddToCart || cartStatus === "adding"}
-        className={`mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-sm font-semibold transition ${
-          !canAddToCart || cartStatus === "adding"
-            ? "cursor-not-allowed bg-white/20 text-stone-300"
-            : "bg-white text-stone-950 hover:bg-stone-100"
-        }`}
-      >
-        {buttonLabel}
-        <ArrowRight className="h-4 w-4" />
-      </button>
-
-      {cartError ? (
-        <p className="mt-4 text-sm text-red-200">{cartError}</p>
-      ) : (
-        <p className="mt-4 text-sm text-stone-400">
-          Generated artwork, custom text, and product configuration are all preserved in the cart item.
-        </p>
-      )}
+      {cartError ? <p className="mt-2 text-sm text-red-200">{cartError}</p> : null}
     </div>
   )
 }

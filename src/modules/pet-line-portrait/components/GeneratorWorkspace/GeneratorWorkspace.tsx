@@ -44,6 +44,7 @@ export default function GeneratorWorkspace({
         <GeneratorWorkspaceLayout
           preview={
             <PreviewPanel
+              sourceImageUrl={state.aiInput.sourceImageUrl}
               artworkUrl={state.generatedArtwork.imageUrl}
               croppedImageUrl={state.aiInput.croppedImageUrl}
               customText={state.presentation.customText}

@@ -8,12 +8,16 @@ export default function EmptyPreviewState({
   body: string
 }) {
   return (
-    <div className="flex min-h-[560px] flex-col items-center justify-center rounded-[30px] border border-dashed border-stone-300 bg-white px-8 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f6f1e8] text-stone-700">
-        <PawPrint className="h-7 w-7" />
+    <div className="flex h-full min-h-0 flex-col items-center justify-center rounded-[24px] border border-dashed border-stone-300 bg-white px-4 text-center sm:px-8 xl:rounded-[30px]">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f6f1e8] text-stone-700 sm:h-16 sm:w-16">
+        <PawPrint className="h-6 w-6 sm:h-7 sm:w-7" />
       </div>
-      <h4 className="mt-6 text-2xl font-semibold text-stone-950">{title}</h4>
-      <p className="mt-4 max-w-md text-sm leading-7 text-stone-500">{body}</p>
+      <h4 className="mt-4 text-lg font-semibold text-stone-950 sm:mt-6 sm:text-2xl">
+        {title}
+      </h4>
+      <p className="mt-2 max-w-md text-xs leading-5 text-stone-500 sm:mt-4 sm:text-sm sm:leading-7">
+        {body}
+      </p>
     </div>
   )
 }

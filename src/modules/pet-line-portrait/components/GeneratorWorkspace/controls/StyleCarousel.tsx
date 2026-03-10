@@ -10,13 +10,13 @@ export default function StyleCarousel({
   onSelect: (styleId: string) => void
 }) {
   return (
-    <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+    <div className="grid gap-3 sm:-mx-1 sm:flex sm:overflow-x-auto sm:px-1 sm:pb-1">
       {styles.map((style) => (
         <button
           key={style.id}
           type="button"
           onClick={() => onSelect(style.id)}
-          className={`min-w-[220px] rounded-[24px] border p-3 text-left transition ${
+          className={`min-w-0 w-full rounded-[24px] border p-3 text-left transition sm:min-w-[220px] sm:w-auto ${
             selectedStyleId === style.id
               ? "border-stone-950 bg-white shadow-sm"
               : "border-stone-200 bg-white/70"

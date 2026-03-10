@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   ArrowRight,
   Check,
@@ -286,9 +286,43 @@ function SectionIntro({
 
 function PageHeader() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const headerRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    const header = headerRef.current
+
+    if (!header) {
+      return
+    }
+
+    const root = document.documentElement
+    const syncHeaderHeight = () => {
+      root.style.setProperty("--pet-portrait-header-height", `${header.offsetHeight}px`)
+      root.style.setProperty("--pet-portrait-preview-gap", window.innerWidth >= 1280 ? "24px" : "12px")
+    }
+
+    syncHeaderHeight()
+
+    const resizeObserver = new ResizeObserver(() => {
+      syncHeaderHeight()
+    })
+
+    resizeObserver.observe(header)
+    window.addEventListener("resize", syncHeaderHeight)
+
+    return () => {
+      resizeObserver.disconnect()
+      window.removeEventListener("resize", syncHeaderHeight)
+      root.style.removeProperty("--pet-portrait-header-height")
+      root.style.removeProperty("--pet-portrait-preview-gap")
+    }
+  }, [])
 
   return (
-    <header className="sticky top-0 z-40 border-b border-stone-200/80 bg-[#f6f1e8]/90 backdrop-blur">
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-40 border-b border-stone-200/80 bg-[#f6f1e8]/90 backdrop-blur"
+    >
       <div className="content-container">
         <div className="flex items-center justify-between gap-6 py-4">
           <a
