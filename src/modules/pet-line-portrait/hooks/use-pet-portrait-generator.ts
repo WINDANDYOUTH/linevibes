@@ -16,6 +16,8 @@ import type {
   PortraitStyle,
   ProductType,
   SizeOption,
+  TextAlignOption,
+  TextFontOption,
 } from "../types/generator"
 
 type TemplateProductsResponse = {
@@ -31,6 +33,10 @@ const initialState: GeneratorState = {
   },
   presentation: {
     customText: "",
+    textFont: "sans",
+    textColor: "#111111",
+    textAlign: "center",
+    textSize: 26,
     productType: "digital",
     frameOption: "none",
     sizeOption: "medium",
@@ -59,6 +65,11 @@ async function blobUrlToFile(blobUrl: string, filename: string) {
   const blob = await response.blob()
   const ext = blob.type.split("/")[1] || "png"
   return new File([blob], `${filename}.${ext}`, { type: blob.type || "image/png" })
+}
+
+function normalizeHexColor(input: string, fallback: string) {
+  const normalized = input.trim()
+  return /^#([0-9a-fA-F]{6})$/.test(normalized) ? normalized : fallback
 }
 
 export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
@@ -183,6 +194,46 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
       presentation: {
         ...current.presentation,
         customText: text,
+      },
+    }))
+  }, [])
+
+  const setTextFont = useCallback((font: TextFontOption) => {
+    setState((current) => ({
+      ...current,
+      presentation: {
+        ...current.presentation,
+        textFont: font,
+      },
+    }))
+  }, [])
+
+  const setTextColor = useCallback((color: string) => {
+    setState((current) => ({
+      ...current,
+      presentation: {
+        ...current.presentation,
+        textColor: normalizeHexColor(color, current.presentation.textColor),
+      },
+    }))
+  }, [])
+
+  const setTextAlign = useCallback((align: TextAlignOption) => {
+    setState((current) => ({
+      ...current,
+      presentation: {
+        ...current.presentation,
+        textAlign: align,
+      },
+    }))
+  }, [])
+
+  const setTextSize = useCallback((size: number) => {
+    setState((current) => ({
+      ...current,
+      presentation: {
+        ...current.presentation,
+        textSize: Math.max(18, Math.min(42, Math.round(size))),
       },
     }))
   }, [])
@@ -319,6 +370,10 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
           croppedImageUrl: state.aiInput.croppedImageUrl ?? "",
           selectedStyleId: state.aiInput.selectedStyleId ?? "",
           customText: state.presentation.customText,
+          textFont: state.presentation.textFont,
+          textColor: state.presentation.textColor,
+          textAlign: state.presentation.textAlign,
+          textSize: state.presentation.textSize,
           productType: state.presentation.productType,
           frameOption: state.presentation.frameOption,
           sizeOption: state.presentation.sizeOption,
@@ -371,9 +426,13 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
       state.generatedArtwork.imageUrl,
       state.generatedArtwork.sessionId,
       state.presentation.customText,
+      state.presentation.textAlign,
+      state.presentation.textColor,
+      state.presentation.textFont,
       state.presentation.frameOption,
       state.presentation.productType,
       state.presentation.sizeOption,
+      state.presentation.textSize,
       templateProducts.digital?.variantId,
       templateProducts.print?.variantId,
       trackAddToCart,
@@ -409,6 +468,10 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
       setCroppedImage,
       setSelectedStyle,
       setCustomText,
+      setTextFont,
+      setTextColor,
+      setTextAlign,
+      setTextSize,
       setProductType,
       setFrameOption,
       setSizeOption,
@@ -424,11 +487,15 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
       resetGenerator,
       setCroppedImage,
       setCustomText,
+      setTextAlign,
+      setTextColor,
+      setTextFont,
       setFrameOption,
       setProductType,
       setSelectedStyle,
       setSizeOption,
       setSourceImage,
+      setTextSize,
     ]
   )
 

@@ -7,13 +7,24 @@ import {
   useRef,
   useState,
 } from "react"
-import { Crop, Minus, Move, Plus, RotateCcw, Upload, X } from "lucide-react"
+import {
+  ChevronDown,
+  ChevronUp,
+  Crop,
+  Minus,
+  Move,
+  Plus,
+  RotateCcw,
+  Upload,
+  X,
+} from "lucide-react"
 
 export type ImageUploadCropperProps = {
   sourceImageUrl: string | null
   croppedImageUrl: string | null
   onSourceImageChange: (url: string | null) => void
   onCroppedImageChange: (url: string | null) => void
+  onRemovePhoto?: () => void
 }
 
 type CropRect = {
@@ -318,6 +329,7 @@ export default function ImageUploadCropper({
   croppedImageUrl,
   onSourceImageChange,
   onCroppedImageChange,
+  onRemovePhoto,
 }: ImageUploadCropperProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -333,6 +345,7 @@ export default function ImageUploadCropper({
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 })
   const [committedDraft, setCommittedDraft] = useState<CropDraft | null>(null)
   const [draft, setDraft] = useState<CropDraft | null>(null)
+  const [showCropHelp, setShowCropHelp] = useState(false)
 
   useEffect(() => {
     return () => {
@@ -657,12 +670,8 @@ export default function ImageUploadCropper({
 
   const handleMeta: Array<{ handle: HandleDirection; className: string; cursor: string }> = [
     { handle: "nw", className: "left-0 top-0 -translate-x-1/2 -translate-y-1/2", cursor: "nwse-resize" },
-    { handle: "n", className: "left-1/2 top-0 -translate-x-1/2 -translate-y-1/2", cursor: "ns-resize" },
     { handle: "ne", className: "right-0 top-0 translate-x-1/2 -translate-y-1/2", cursor: "nesw-resize" },
-    { handle: "w", className: "left-0 top-1/2 -translate-x-1/2 -translate-y-1/2", cursor: "ew-resize" },
-    { handle: "e", className: "right-0 top-1/2 translate-x-1/2 -translate-y-1/2", cursor: "ew-resize" },
     { handle: "sw", className: "left-0 bottom-0 -translate-x-1/2 translate-y-1/2", cursor: "nesw-resize" },
-    { handle: "s", className: "left-1/2 bottom-0 -translate-x-1/2 translate-y-1/2", cursor: "ns-resize" },
     { handle: "se", className: "right-0 bottom-0 translate-x-1/2 translate-y-1/2", cursor: "nwse-resize" },
   ]
 
@@ -686,8 +695,14 @@ export default function ImageUploadCropper({
 
       <button
         type="button"
-        onClick={() => inputRef.current?.click()}
-        className="flex min-h-[240px] w-full flex-col items-center justify-center rounded-[28px] border border-dashed border-stone-300 bg-white px-6 text-center transition hover:border-stone-500"
+        onClick={() => {
+          if (!sourceImageUrl) {
+            inputRef.current?.click()
+          }
+        }}
+        className={`flex min-h-[240px] w-full flex-col items-center justify-center rounded-[28px] border border-dashed border-stone-300 bg-white px-6 text-center transition ${
+          sourceImageUrl ? "cursor-default" : "hover:border-stone-500"
+        }`}
       >
         {sourceImageUrl ? (
           <div className="w-full">
@@ -699,9 +714,9 @@ export default function ImageUploadCropper({
                 className="h-full w-full object-contain"
               />
             </div>
-            <p className="mt-4 text-sm font-semibold text-stone-900">Replace photo</p>
+            <p className="mt-4 text-sm font-semibold text-stone-900">Photo uploaded</p>
             <p className="mt-2 text-xs uppercase tracking-[0.24em] text-stone-400">
-              Click to upload a different image
+              Preview ready for crop adjustment
             </p>
           </div>
         ) : (
@@ -710,11 +725,11 @@ export default function ImageUploadCropper({
               <Upload className="h-6 w-6" />
             </div>
             <p className="mt-5 text-lg font-semibold text-stone-900">
-              Drag and drop your image here
+              Tap to upload your photo
             </p>
-            <p className="mt-2 text-sm text-stone-500">or click to upload</p>
+            <p className="mt-2 text-sm text-stone-500">JPG, PNG, WEBP up to 15MB</p>
             <p className="mt-4 text-xs uppercase tracking-[0.24em] text-stone-400">
-              JPG, PNG, WEBP
+              Single pet, bright lighting, face visible
             </p>
           </>
         )}
@@ -726,34 +741,52 @@ export default function ImageUploadCropper({
             <div>
               <p className="text-sm font-semibold text-stone-950">Crop your image</p>
               <p className="mt-1 text-sm text-stone-500">
-                Drag the crop area, resize from handles, switch aspect ratios, and zoom the selection.
+                Adjust framing before generation. 4:5 is the safest option for this layout.
               </p>
             </div>
             <Crop className="mt-1 h-5 w-5 text-stone-400" />
           </div>
 
-          <div className="mt-5 flex items-center gap-4 rounded-[20px] border border-stone-200 bg-[#faf8f3] p-4">
-            <div className="relative h-[110px] w-[110px] overflow-hidden rounded-2xl border border-stone-200 bg-white">
+          <div className="mt-5 rounded-[20px] border border-stone-200 bg-[#faf8f3] p-4">
+            <div className="relative overflow-hidden rounded-2xl border border-stone-200 bg-white">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={croppedImageUrl || sourceImageUrl}
                 alt="Current crop"
-                className="h-full w-full object-contain"
+                className="aspect-[4/3] h-full w-full object-contain"
               />
             </div>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 pt-4">
               <p className="text-sm font-semibold text-stone-900">Current crop</p>
               <p className="mt-1 text-sm leading-6 text-stone-500">
-                Default is <span className="font-semibold text-stone-700">4:5</span> because it best matches the product preview. Other ratios are available, but they can change AI composition.
+                Ratio: <span className="font-semibold text-stone-700">{currentAspectLabel}</span>
               </p>
-              <button
-                type="button"
-                onClick={openModal}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-stone-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-stone-800"
-              >
-                <Move className="h-4 w-4" />
-                Edit crop
-              </button>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={openModal}
+                  className="inline-flex items-center gap-2 rounded-full bg-stone-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-stone-800"
+                >
+                  <Move className="h-4 w-4" />
+                  Edit crop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  className="inline-flex items-center rounded-full border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50"
+                >
+                  Replace photo
+                </button>
+                {onRemovePhoto ? (
+                  <button
+                    type="button"
+                    onClick={onRemovePhoto}
+                    className="inline-flex items-center rounded-full px-2 py-2 text-sm font-medium text-stone-500 transition hover:text-stone-900"
+                  >
+                    Remove
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
@@ -780,7 +813,7 @@ export default function ImageUploadCropper({
             </div>
 
             <div className="flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_320px]">
-              <div className="h-[34svh] min-h-[240px] shrink-0 border-b border-stone-200 bg-[#111111] p-3 sm:h-[40svh] sm:min-h-[360px] sm:p-4 lg:h-auto lg:min-h-[300px] lg:border-b-0 lg:border-r lg:p-6">
+              <div className="h-[38svh] min-h-[250px] shrink-0 border-b border-stone-200 bg-[#111111] p-3 sm:h-[40svh] sm:min-h-[360px] sm:p-4 lg:h-auto lg:min-h-[300px] lg:border-b-0 lg:border-r lg:p-6">
                 <div
                   ref={stageRef}
                   className="relative h-full min-h-[274px] w-full overflow-hidden rounded-[20px] bg-black sm:min-h-[320px] sm:rounded-[24px]"
@@ -880,7 +913,7 @@ export default function ImageUploadCropper({
                             {handleMeta.map(({ handle, className, cursor }) => (
                               <span
                                 key={handle}
-                                className={`absolute h-4 w-4 rounded-sm border border-stone-300 bg-white ${className}`}
+                                className={`absolute h-8 w-8 rounded-full border-2 border-stone-300 bg-white shadow ${className} sm:h-6 sm:w-6 sm:rounded-sm sm:border`}
                                 style={{ cursor }}
                                 onPointerDown={(event) => {
                                   if (!draft) {
@@ -906,12 +939,12 @@ export default function ImageUploadCropper({
                 </div>
               </div>
 
-              <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain bg-[#fcfbf8] p-4 pb-5 sm:p-5 lg:p-6">
+              <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain bg-[#fcfbf8] p-4 pb-5 sm:p-5 lg:p-6">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-400">
                     Aspect Ratio
                   </p>
-                  <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {ASPECT_PRESETS.map((preset) => {
                       const selected = draft?.aspectId === preset.id
                       return (
@@ -919,16 +952,13 @@ export default function ImageUploadCropper({
                           key={preset.id}
                           type="button"
                           onClick={() => handleAspectChange(preset.id)}
-                          className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
+                          className={`rounded-full border px-4 py-2 text-sm transition ${
                             selected
                               ? "border-stone-950 bg-stone-950 text-white"
                               : "border-stone-200 bg-white text-stone-700 hover:border-stone-400"
                           }`}
                         >
-                          <span className="block font-semibold">{preset.label}</span>
-                          <span className={`mt-1 block text-xs ${selected ? "text-white/70" : "text-stone-400"}`}>
-                            {preset.recommended ? "Recommended" : "Available"}
-                          </span>
+                          <span className="font-semibold">{preset.label}</span>
                         </button>
                       )
                     })}
@@ -936,14 +966,12 @@ export default function ImageUploadCropper({
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-400">
-                    Crop Controls
-                  </p>
-                  <div className="mt-3 flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => nudgeZoom(1.08)}
                       className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-700 transition hover:border-stone-400"
+                      aria-label="Zoom out"
                     >
                       <Minus className="h-4 w-4" />
                     </button>
@@ -951,6 +979,7 @@ export default function ImageUploadCropper({
                       type="button"
                       onClick={() => nudgeZoom(0.92)}
                       className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-700 transition hover:border-stone-400"
+                      aria-label="Zoom in"
                     >
                       <Plus className="h-4 w-4" />
                     </button>
@@ -971,42 +1000,57 @@ export default function ImageUploadCropper({
                       <RotateCcw className="h-4 w-4" />
                       Reset
                     </button>
+                    <button
+                      type="button"
+                      onClick={applyCrop}
+                      className="inline-flex items-center rounded-full bg-[#b33e56] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#9d364c] lg:hidden"
+                    >
+                      Apply crop
+                    </button>
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-stone-500">
-                    `-` zooms out the selection, `+` zooms in. You can also use the mouse wheel over the image.
-                  </p>
                 </div>
 
-                <div className="rounded-[24px] border border-stone-200 bg-white p-4">
-                  <p className="text-sm font-semibold text-stone-900">Current setting</p>
-                  <p className="mt-2 text-sm leading-6 text-stone-500">
-                    Ratio: <span className="font-semibold text-stone-700">{currentAspectLabel}</span>
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-stone-500">
-                    4:5 is the safest option because the product preview panel uses a portrait frame. Other ratios will send a different-shaped image into the AI pipeline.
-                  </p>
-                </div>
-
-                <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                  Different crop ratios can change both the pet composition and the generated output shape, because the generator receives the cropped bitmap directly.
+                <div className="rounded-[20px] border border-stone-200 bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setShowCropHelp((current) => !current)}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-stone-900">Crop guidance</p>
+                      <p className="mt-1 text-sm text-stone-500">
+                        Ratio: <span className="font-semibold text-stone-700">{currentAspectLabel}</span>
+                      </p>
+                    </div>
+                    {showCropHelp ? (
+                      <ChevronUp className="h-4 w-4 text-stone-400" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-stone-400" />
+                    )}
+                  </button>
+                  {showCropHelp ? (
+                    <div className="border-t border-stone-200 px-4 py-3 text-sm leading-6 text-stone-500">
+                      4:5 is the safest option because the preview uses a portrait frame. On mobile, drag the crop box and use the larger corner handles to resize. Different ratios can change the generated composition.
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center justify-end gap-3 border-t border-stone-200 bg-white px-4 py-4 sm:px-6 sm:py-5">
+            <div className="grid shrink-0 grid-cols-2 gap-3 border-t border-stone-200 bg-white px-4 py-4 sm:flex sm:items-center sm:justify-end sm:px-6 sm:py-5">
               <button
                 type="button"
                 onClick={closeModal}
-                className="rounded-full border border-stone-300 px-5 py-2.5 text-sm font-semibold text-stone-700 transition hover:bg-stone-50"
+                className="w-full rounded-full border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 sm:w-auto"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={applyCrop}
-                className="rounded-full bg-[#b33e56] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#9d364c]"
+                className="w-full rounded-full bg-[#b33e56] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#9d364c] sm:w-auto"
               >
-                Crop
+                Apply crop
               </button>
             </div>
           </div>

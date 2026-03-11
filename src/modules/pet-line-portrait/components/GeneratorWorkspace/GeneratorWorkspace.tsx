@@ -62,12 +62,20 @@ export default function GeneratorWorkspace({
               artworkUrl={state.generatedArtwork.imageUrl}
               croppedImageUrl={state.aiInput.croppedImageUrl}
               customText={state.presentation.customText}
+              textFont={state.presentation.textFont}
+              textColor={state.presentation.textColor}
+              textAlign={state.presentation.textAlign}
+              textSize={state.presentation.textSize}
               productType={state.presentation.productType}
               frameOption={state.presentation.frameOption}
               sizeOption={state.presentation.sizeOption}
               generationStatus={state.generationStatus}
               needsRegeneration={computed.needsRegeneration}
               generationError={state.generationError}
+              canGenerate={computed.canGenerate}
+              onGenerate={() => {
+                void actions.generateArtwork()
+              }}
             />
           }
           configurator={

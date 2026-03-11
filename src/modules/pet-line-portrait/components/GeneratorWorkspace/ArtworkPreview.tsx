@@ -3,6 +3,8 @@ import type {
   GenerationStatus,
   ProductType,
   SizeOption,
+  TextAlignOption,
+  TextFontOption,
 } from "../../types/generator"
 import EmptyPreviewState from "./EmptyPreviewState"
 
@@ -30,32 +32,68 @@ function sizeMaxWidth(sizeOption: SizeOption) {
   }
 }
 
+function textFontClass(font: TextFontOption) {
+  switch (font) {
+    case "serif":
+      return "font-[family-name:Georgia,_Times_New_Roman,_serif]"
+    case "script":
+      return "font-[family-name:Brush_Script_MT,_Segoe_Script,_cursive]"
+    case "modern":
+      return "font-[family-name:Helvetica_Neue,_Arial,_sans-serif]"
+    default:
+      return "font-sans"
+  }
+}
+
+function textAlignClass(align: TextAlignOption) {
+  switch (align) {
+    case "left":
+      return "items-start text-left"
+    case "right":
+      return "items-end text-right"
+    default:
+      return "items-center text-center"
+  }
+}
+
 export default function ArtworkPreview({
   artworkUrl,
   croppedImageUrl,
   customText,
+  textFont,
+  textColor,
+  textAlign,
+  textSize,
   productType,
   frameOption,
   sizeOption,
   generationStatus,
   needsRegeneration,
   generationError,
+  canGenerate,
+  onGenerate,
 }: {
   artworkUrl: string | null
   croppedImageUrl: string | null
   customText: string
+  textFont: TextFontOption
+  textColor: string
+  textAlign: TextAlignOption
+  textSize: number
   productType: ProductType
   frameOption: FrameOption
   sizeOption: SizeOption
   generationStatus: GenerationStatus
   needsRegeneration: boolean
   generationError: string | null
+  canGenerate: boolean
+  onGenerate: () => void
 }) {
   if (!croppedImageUrl && !artworkUrl) {
     return (
       <EmptyPreviewState
         title="Your Portrait Preview Will Appear Here"
-        body="Upload a pet photo and crop it to prepare the preview. Once you generate, product text and framing choices will update here instantly."
+        body="Upload a pet photo. Crop it to unlock the live preview."
       />
     )
   }
@@ -63,7 +101,7 @@ export default function ArtworkPreview({
   if (generationStatus === "generating") {
     return (
       <div className="flex h-full min-h-0 flex-col items-center justify-center rounded-[24px] border border-stone-300 bg-white px-4 py-6 text-center sm:px-8 xl:py-8 xl:rounded-[30px]">
-        <div className="h-full max-h-[52vw] min-h-[180px] w-full max-w-[220px] animate-pulse rounded-[22px] bg-[linear-gradient(110deg,#f5f5f4_8%,#e7e5e4_18%,#f5f5f4_33%)] bg-[length:200%_100%] sm:max-h-[320px] sm:max-w-[320px] xl:h-[420px] xl:max-h-none xl:max-w-[420px] xl:rounded-[28px]" />
+        <div className="aspect-[4/5] h-auto min-h-[220px] w-[min(70vw,320px)] animate-pulse rounded-[22px] bg-[linear-gradient(110deg,#f5f5f4_8%,#e7e5e4_18%,#f5f5f4_33%)] bg-[length:200%_100%] sm:max-h-[320px] sm:max-w-[320px] xl:h-[420px] xl:w-full xl:max-h-none xl:max-w-[420px] xl:rounded-[28px]" />
         <h4 className="mt-4 text-lg font-semibold text-stone-950 sm:text-2xl">
           Generating your portrait preview...
         </h4>
@@ -89,6 +127,14 @@ export default function ArtworkPreview({
 
   const displayUrl = artworkUrl || croppedImageUrl
   const showFrame = productType === "print" && frameOption !== "none"
+  const showInlineCta = !!croppedImageUrl && (needsRegeneration || !artworkUrl)
+  const inlineCtaLabel =
+    artworkUrl && needsRegeneration ? "Regenerate Preview" : "Generate Preview"
+  const mobileStatusMessage = needsRegeneration
+    ? "Preview is outdated. Generate again to match the latest crop or style."
+    : !artworkUrl && croppedImageUrl
+    ? "Crop is ready. Generate the preview to create AI line art from this image."
+    : null
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-stone-300 bg-white p-1.5 sm:p-3 xl:rounded-[30px] xl:p-5">
@@ -121,23 +167,51 @@ export default function ArtworkPreview({
               ) : null}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.45),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.38))]" />
               {customText ? (
-                <div className="absolute inset-x-2 bottom-2 text-center sm:inset-x-4 sm:bottom-4 xl:inset-x-6 xl:bottom-6">
-                  <div className="inline-flex max-w-full items-center justify-center rounded-full bg-white/88 px-3 py-1.5 text-xs font-semibold text-stone-900 shadow-sm backdrop-blur sm:px-4 sm:py-2 sm:text-sm xl:px-5">
-                    <span className="truncate">{customText}</span>
+                <div
+                  className={`absolute inset-x-3 bottom-3 flex sm:inset-x-4 sm:bottom-4 xl:inset-x-6 xl:bottom-6 ${textAlignClass(textAlign)}`}
+                >
+                  <div className="absolute inset-x-0 bottom-0 h-20 rounded-b-[20px] bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(28,25,23,0.12)_100%)] sm:h-24 xl:rounded-b-[28px]" />
+                  <div
+                    className={`relative max-w-full rounded-lg bg-white/40 px-2 py-1 leading-none shadow-[0_8px_24px_rgba(28,25,23,0.12)] backdrop-blur-[2px] ${textFontClass(textFont)}`}
+                    style={{
+                      color: textColor,
+                      fontSize: `clamp(14px, ${Math.max(14, textSize * 0.52)}px, ${textSize}px)`,
+                    }}
+                  >
+                    <span className="block truncate">{customText}</span>
                   </div>
                 </div>
               ) : null}
             </div>
           </div>
 
-          {!artworkUrl && croppedImageUrl ? (
+          {mobileStatusMessage ? (
             <p className="mt-3 max-w-md text-center text-xs leading-5 text-stone-500 sm:text-sm sm:leading-6 xl:mt-6 xl:leading-7">
-              Crop is ready. Generate the preview to create AI line art from this image.
+              {mobileStatusMessage}
             </p>
           ) : null}
 
+          {showInlineCta ? (
+            <div className="pointer-events-none absolute inset-x-3 bottom-3 z-10 sm:inset-x-6 sm:bottom-6 xl:hidden">
+              <div className="rounded-[20px] bg-[linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0.96)_28%)] px-2 pb-2 pt-10">
+                <button
+                  type="button"
+                  onClick={onGenerate}
+                  disabled={!canGenerate}
+                  className={`pointer-events-auto inline-flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-semibold transition ${
+                    canGenerate
+                      ? "bg-stone-950 text-white"
+                      : "cursor-not-allowed bg-stone-300 text-stone-500"
+                  }`}
+                >
+                  {inlineCtaLabel}
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           {needsRegeneration ? (
-            <div className="mt-3 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 sm:text-sm xl:mt-6 xl:px-4 xl:py-2">
+            <div className="mt-3 hidden rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900 sm:text-sm xl:mt-6 xl:block xl:px-4 xl:py-2">
               Preview is outdated. Generate again to match the latest crop or style.
             </div>
           ) : null}

@@ -16,9 +16,9 @@ export default function StyleCarousel({
           key={style.id}
           type="button"
           onClick={() => onSelect(style.id)}
-          className={`min-w-[116px] max-w-[116px] shrink-0 snap-start rounded-[20px] border p-2.5 text-left transition xl:min-w-0 xl:max-w-none xl:w-full xl:rounded-[24px] xl:p-3 ${
+          className={`min-w-[96px] max-w-[96px] shrink-0 snap-start rounded-[20px] border p-2 text-left transition xl:min-w-0 xl:max-w-none xl:w-full xl:rounded-[24px] xl:p-3 ${
             selectedStyleId === style.id
-              ? "border-stone-950 bg-white shadow-sm"
+              ? "border-[#2f80d1] bg-white shadow-[0_10px_24px_rgba(47,128,209,0.14)] xl:border-stone-950 xl:shadow-sm"
               : "border-stone-200 bg-white/70"
           }`}
         >
@@ -34,10 +34,10 @@ export default function StyleCarousel({
               <div className="aspect-square xl:aspect-[4/3]" />
             )}
           </div>
-          <p className="mt-3 text-sm font-semibold text-stone-950 xl:mt-4 xl:text-base">
+          <p className="mt-2.5 text-[12px] font-semibold text-stone-950 xl:mt-4 xl:text-base">
             {style.name}
           </p>
-          <p className="mt-1.5 text-[11px] leading-4 text-stone-600 xl:mt-2 xl:text-sm xl:leading-6">
+          <p className="mt-1 hidden text-[11px] leading-4 text-stone-600 xl:mt-2 xl:block xl:text-sm xl:leading-6">
             {style.description}
           </p>
         </button>

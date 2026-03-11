@@ -22,6 +22,9 @@ export default function StyleSection({
           <h3 className="mt-2 text-xl font-semibold text-stone-950 xl:text-2xl">
             Pick a Portrait Style
           </h3>
+          <p className="mt-3 text-sm leading-6 text-stone-600 xl:leading-7">
+            Choose the line-art direction before generating the preview.
+          </p>
         </div>
         <Sparkles className="h-5 w-5 text-stone-400" />
       </div>

@@ -33,23 +33,29 @@ export default function UploadSection({
       </div>
 
       <div className="mt-5 xl:mt-6">
+        <div className="mb-4 rounded-[18px] border border-stone-200 bg-[#f8f7f4] px-4 py-3 xl:hidden">
+          {sourceImageUrl ? (
+            <p className="text-sm text-stone-700">
+              <span className="font-semibold text-stone-950">1 photo uploaded</span>
+              {" "}·{" "}
+              <span className="font-semibold text-stone-950">Crop ready</span>
+              {" "}· Ready for generation
+            </p>
+          ) : (
+            <p className="text-sm text-stone-700">
+              <span className="font-semibold text-stone-950">Single pet</span>
+              {" "}· Bright lighting · Face visible
+            </p>
+          )}
+        </div>
         <ImageUploadCropper
           sourceImageUrl={sourceImageUrl}
           croppedImageUrl={croppedImageUrl}
           onSourceImageChange={onSourceImageChange}
           onCroppedImageChange={onCroppedImageChange}
+          onRemovePhoto={onReplacePhoto}
         />
       </div>
-
-      {sourceImageUrl ? (
-        <button
-          type="button"
-          onClick={onReplacePhoto}
-          className="mt-5 inline-flex items-center rounded-full border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 xl:hover:bg-white"
-        >
-          Remove photo
-        </button>
-      ) : null}
     </div>
   )
 }

@@ -1,6 +1,8 @@
 export type ProductType = "digital" | "print"
 export type FrameOption = "none" | "oak" | "black" | "acrylic"
 export type SizeOption = "small" | "medium" | "large"
+export type TextFontOption = "sans" | "serif" | "script" | "modern"
+export type TextAlignOption = "left" | "center" | "right"
 export type GenerationStatus = "idle" | "generating" | "success" | "error"
 export type CartStatus = "idle" | "adding" | "success" | "error"
 
@@ -26,6 +28,10 @@ export type LastGeneratedInput = {
 
 export type PresentationConfig = {
   customText: string
+  textFont: TextFontOption
+  textColor: string
+  textAlign: TextAlignOption
+  textSize: number
   productType: ProductType
   frameOption: FrameOption
   sizeOption: SizeOption
@@ -59,6 +65,10 @@ export type GeneratorActions = {
   setCroppedImage: (url: string | null) => void
   setSelectedStyle: (styleId: string) => void
   setCustomText: (text: string) => void
+  setTextFont: (font: TextFontOption) => void
+  setTextColor: (color: string) => void
+  setTextAlign: (align: TextAlignOption) => void
+  setTextSize: (size: number) => void
   setProductType: (type: ProductType) => void
   setFrameOption: (frame: FrameOption) => void
   setSizeOption: (size: SizeOption) => void
