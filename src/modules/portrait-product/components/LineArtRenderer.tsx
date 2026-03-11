@@ -23,7 +23,7 @@ export default function LineArtRenderer({
 }: LineArtRendererProps) {
   return (
     <div
-      className={`relative w-full aspect-[3/4] bg-white rounded-lg overflow-hidden ${className}`}
+      className={`relative w-full aspect-[3/4] rounded-lg overflow-hidden border border-black/5 bg-[linear-gradient(45deg,_#f3f4f6_25%,_transparent_25%),linear-gradient(-45deg,_#f3f4f6_25%,_transparent_25%),linear-gradient(45deg,_transparent_75%,_#f3f4f6_75%),linear-gradient(-45deg,_transparent_75%,_#f3f4f6_75%)] bg-[length:24px_24px] bg-[position:0_0,0_12px,12px_-12px,-12px_0] ${className}`}
       data-testid="line-art-renderer"
     >
       {imageUrl ? (

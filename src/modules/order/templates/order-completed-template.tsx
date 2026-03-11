@@ -11,6 +11,7 @@ import PaymentDetails from "@modules/order/components/payment-details"
 import PortraitDownloadCard from "@modules/order/components/portrait-download-card"
 import OrderAnalytics from "@modules/order/components/order-analytics"
 import { HttpTypes } from "@medusajs/types"
+import { getPortraitLineItemMetadata } from "@lib/util/portrait-line-item-metadata"
 
 type OrderCompletedTemplateProps = {
   order: HttpTypes.StoreOrder
@@ -24,9 +25,15 @@ export default async function OrderCompletedTemplate({
   const isOnboarding = cookies.get("_medusa_onboarding")?.value === "true"
 
   // Check if any line items are portrait products (have portrait metadata)
-  const hasPortraitItems = order.items?.some(
-    (item) => item.metadata?.includes_digital_download === "true"
-  )
+  const hasPortraitItems = order.items?.some((item) => {
+    const portraitMeta = getPortraitLineItemMetadata(
+      item.metadata as Record<string, unknown> | undefined
+    )
+
+    return (
+      portraitMeta.includesDigitalDownload && !!portraitMeta.portraitImageUrl
+    )
+  })
 
   return (
     <div className="py-6 min-h-[calc(100vh-64px)]">
@@ -67,6 +74,3 @@ export default async function OrderCompletedTemplate({
     </div>
   )
 }
-
-
-

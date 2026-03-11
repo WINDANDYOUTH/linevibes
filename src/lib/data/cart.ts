@@ -24,7 +24,11 @@ import { getLocale } from "@lib/data/locale-actions"
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
   fields ??=
-    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, +completed_at"
+
+  if (!fields.includes("completed_at")) {
+    fields = `${fields}, +completed_at`
+  }
 
   if (!id) {
     return null
@@ -48,7 +52,20 @@ export async function retrieveCart(cartId?: string, fields?: string) {
       next,
       cache: "force-cache",
     })
-    .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
+    .then(async ({ cart }: { cart: HttpTypes.StoreCart }) => {
+      const completedAt = (
+        cart as HttpTypes.StoreCart & {
+          completed_at?: string | Date | null
+        }
+      ).completed_at
+
+      if (completedAt) {
+        await removeCartId()
+        return null
+      }
+
+      return cart
+    })
     .catch(() => null)
 }
 
@@ -59,7 +76,7 @@ export async function getOrSetCart(countryCode: string) {
     throw new Error(`Region not found for country code: ${countryCode}`)
   }
 
-  let cart = await retrieveCart(undefined, "id,region_id")
+  let cart = await retrieveCart(undefined, "id,region_id,+completed_at")
 
   const headers = {
     ...(await getAuthHeaders()),
@@ -421,7 +438,7 @@ export async function placeOrder(cartId?: string) {
     const orderCacheTag = await getCacheTag("orders")
     revalidateTag(orderCacheTag)
 
-    removeCartId()
+    await removeCartId()
     redirect(`/${countryCode}/order/${cartRes?.order.id}/confirmed`)
   }
 

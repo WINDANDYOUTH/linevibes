@@ -17,6 +17,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Thumbnail from "@modules/products/components/thumbnail"
 import { usePathname } from "next/navigation"
 import { Fragment, useEffect, useRef, useState } from "react"
+import { getPortraitLineItemMetadata } from "@lib/util/portrait-line-item-metadata"
 
 const CartDropdown = ({
   cart: cartState,
@@ -118,81 +119,92 @@ const CartDropdown = ({
                     })
                     .map((item) => {
                       // Detect portrait items and use their generated image as thumbnail
-                      const meta = (item as any).metadata as Record<string, string> | undefined
-                      const isPortrait = !!meta?.portrait_session_id
-                      const effectiveThumb = meta?.portrait_image_url || item.thumbnail
-                      const itemLink = isPortrait && meta?.portrait_session_id
-                        ? `/portrait/result?sid=${meta.portrait_session_id}`
-                        : `/products/${item.product_handle}`
+                      const meta = getPortraitLineItemMetadata(
+                        (item as any).metadata as
+                          | Record<string, unknown>
+                          | undefined
+                      )
+                      const effectiveThumb =
+                        meta.portraitImageUrl || item.thumbnail
+                      const itemLink =
+                        meta.isPortraitItem && meta.portraitSessionId
+                          ? `/portrait/result?sid=${meta.portraitSessionId}`
+                          : `/products/${item.product_handle}`
 
                       return (
-                      <div
-                        className="grid grid-cols-[122px_1fr] gap-x-4"
-                        key={item.id}
-                        data-testid="cart-item"
-                      >
-                        <LocalizedClientLink
-                          href={itemLink}
-                          className="w-24"
+                        <div
+                          className="grid grid-cols-[122px_1fr] gap-x-4"
+                          key={item.id}
+                          data-testid="cart-item"
                         >
-                          <Thumbnail
-                            thumbnail={effectiveThumb}
-                            images={item.variant?.product?.images}
-                            size="square"
-                          />
-                        </LocalizedClientLink>
-                        <div className="flex flex-col justify-between flex-1">
-                          <div className="flex flex-col flex-1">
-                            <div className="flex items-start justify-between">
-                              <div className="flex flex-col overflow-ellipsis whitespace-nowrap mr-4 w-[180px]">
-                                <h3 className="text-base-regular overflow-hidden text-ellipsis">
-                                  <LocalizedClientLink
-                                    href={`/products/${item.product_handle}`}
-                                    data-testid="product-link"
+                          <LocalizedClientLink href={itemLink} className="w-24">
+                            <Thumbnail
+                              thumbnail={effectiveThumb}
+                              images={item.variant?.product?.images}
+                              size="square"
+                            />
+                          </LocalizedClientLink>
+                          <div className="flex flex-col justify-between flex-1">
+                            <div className="flex flex-col flex-1">
+                              <div className="flex items-start justify-between">
+                                <div className="flex flex-col overflow-ellipsis whitespace-nowrap mr-4 w-[180px]">
+                                  <h3 className="text-base-regular overflow-hidden text-ellipsis">
+                                    <LocalizedClientLink
+                                      href={itemLink}
+                                      data-testid="product-link"
+                                    >
+                                      {item.title}
+                                    </LocalizedClientLink>
+                                  </h3>
+                                  <LineItemOptions
+                                    variant={item.variant}
+                                    data-testid="cart-item-variant"
+                                    data-value={item.variant}
+                                  />
+                                  <span
+                                    data-testid="cart-item-quantity"
+                                    data-value={item.quantity}
                                   >
-                                    {item.title}
-                                  </LocalizedClientLink>
-                                </h3>
-                                <LineItemOptions
-                                  variant={item.variant}
-                                  data-testid="cart-item-variant"
-                                  data-value={item.variant}
-                                />
-                                <span
-                                  data-testid="cart-item-quantity"
-                                  data-value={item.quantity}
-                                >
-                                  Quantity: {item.quantity}
-                                </span>
-                              </div>
-                              <div className="flex justify-end">
-                                <LineItemPrice
-                                  item={item}
-                                  style="tight"
-                                  currencyCode={cartState.currency_code}
-                                />
+                                    Quantity: {item.quantity}
+                                  </span>
+                                </div>
+                                <div className="flex justify-end">
+                                  <LineItemPrice
+                                    item={item}
+                                    style="tight"
+                                    currencyCode={cartState.currency_code}
+                                  />
+                                </div>
                               </div>
                             </div>
+                            <DeleteButton
+                              id={item.id}
+                              className="mt-1"
+                              onDeleted={() =>
+                                trackRemoveFromCart({
+                                  id:
+                                    item.variant_id ||
+                                    item.variant?.id ||
+                                    item.id,
+                                  name:
+                                    item.product_title ||
+                                    item.title ||
+                                    "Unknown Product",
+                                  price: item.unit_price || 0,
+                                  currency: (
+                                    cartState.currency_code || "USD"
+                                  ).toUpperCase(),
+                                  quantity: item.quantity || 1,
+                                })
+                              }
+                              data-testid="cart-item-remove-button"
+                            >
+                              Remove
+                            </DeleteButton>
                           </div>
-                          <DeleteButton
-                            id={item.id}
-                            className="mt-1"
-                            onDeleted={() =>
-                              trackRemoveFromCart({
-                                id: item.variant_id || item.variant?.id || item.id,
-                                name: item.product_title || item.title || "Unknown Product",
-                                price: item.unit_price || 0,
-                                currency: (cartState.currency_code || "USD").toUpperCase(),
-                                quantity: item.quantity || 1,
-                              })
-                            }
-                            data-testid="cart-item-remove-button"
-                          >
-                            Remove
-                          </DeleteButton>
                         </div>
-                      </div>
-                    )})}
+                      )
+                    })}
                 </div>
                 <div className="p-4 flex flex-col gap-y-4 text-small-regular">
                   <div className="flex items-center justify-between">
@@ -248,5 +260,3 @@ const CartDropdown = ({
 }
 
 export default CartDropdown
-
-

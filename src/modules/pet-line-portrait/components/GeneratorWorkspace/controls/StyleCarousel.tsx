@@ -10,34 +10,34 @@ export default function StyleCarousel({
   onSelect: (styleId: string) => void
 }) {
   return (
-    <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:mx-0 xl:grid xl:grid-cols-1 xl:overflow-visible xl:px-0 xl:pb-0">
+    <div className="-mx-3 flex snap-x snap-mandatory gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:grid md:grid-cols-2 md:gap-3 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-3">
       {styles.map((style) => (
         <button
           key={style.id}
           type="button"
           onClick={() => onSelect(style.id)}
-          className={`min-w-[96px] max-w-[96px] shrink-0 snap-start rounded-[20px] border p-2 text-left transition xl:min-w-0 xl:max-w-none xl:w-full xl:rounded-[24px] xl:p-3 ${
+          className={`min-w-[148px] max-w-[148px] shrink-0 snap-start overflow-hidden rounded-[14px] border text-left transition md:min-w-0 md:max-w-none md:w-full md:rounded-[18px] md:p-3 ${
             selectedStyleId === style.id
-              ? "border-[#2f80d1] bg-white shadow-[0_10px_24px_rgba(47,128,209,0.14)] xl:border-stone-950 xl:shadow-sm"
-              : "border-stone-200 bg-white/70"
+              ? "border-[#2f80ed] bg-[#f4f8ff] shadow-[0_10px_24px_rgba(47,128,237,0.12)]"
+              : "border-stone-200 bg-[#fbfbfa] hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.06)]"
           }`}
         >
-          <div className="overflow-hidden rounded-[18px] border border-stone-200 bg-stone-100">
+          <div className="overflow-hidden bg-stone-100 md:rounded-[14px] md:border md:border-stone-200">
             {style.thumbnailUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={style.thumbnailUrl}
                 alt={style.name}
-                className="aspect-square h-full w-full object-cover grayscale xl:aspect-[4/3]"
+                className="aspect-[3/4] h-full w-full object-cover grayscale md:aspect-[4/3]"
               />
             ) : (
-              <div className="aspect-square xl:aspect-[4/3]" />
+              <div className="aspect-[3/4] md:aspect-[4/3]" />
             )}
           </div>
-          <p className="mt-2.5 text-[12px] font-semibold text-stone-950 xl:mt-4 xl:text-base">
+          <p className="px-2.5 py-2 text-sm font-semibold text-stone-950 md:mt-3 md:px-0 md:py-0 md:text-[15px]">
             {style.name}
           </p>
-          <p className="mt-1 hidden text-[11px] leading-4 text-stone-600 xl:mt-2 xl:block xl:text-sm xl:leading-6">
+          <p className="hidden md:mt-1 md:block md:text-[12px] md:leading-5 md:text-stone-500">
             {style.description}
           </p>
         </button>

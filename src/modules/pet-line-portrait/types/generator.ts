@@ -5,6 +5,14 @@ export type TextFontOption = "sans" | "serif" | "script" | "modern"
 export type TextAlignOption = "left" | "center" | "right"
 export type GenerationStatus = "idle" | "generating" | "success" | "error"
 export type CartStatus = "idle" | "adding" | "success" | "error"
+export type GeneratorTabId =
+  | "upload"
+  | "style"
+  | "results"
+  | "text"
+  | "format"
+  | "size"
+  | "frame"
 
 export type PortraitStyle = {
   id: string
@@ -39,8 +47,24 @@ export type PresentationConfig = {
 
 export type GeneratedArtwork = {
   imageUrl: string | null
+  originalUrl?: string | null
   generatedAt?: string | null
   sessionId?: string | null
+  styleId?: string | null
+  stylePromptKey?: string | null
+  provider?: string | null
+  model?: string | null
+}
+
+export type GeneratedPortrait = {
+  sessionId: string
+  imageUrl: string
+  originalUrl: string | null
+  generatedAt: string
+  styleId: string | null
+  stylePromptKey: string | null
+  provider: string | null
+  model: string | null
 }
 
 export type GeneratorPrice = {
@@ -53,6 +77,8 @@ export type GeneratorState = {
   aiInput: AIGenerationInput
   presentation: PresentationConfig
   generatedArtwork: GeneratedArtwork
+  generatedPortraits: GeneratedPortrait[]
+  activePortraitSessionId: string | null
   generationStatus: GenerationStatus
   cartStatus: CartStatus
   generationError: string | null
@@ -72,6 +98,7 @@ export type GeneratorActions = {
   setProductType: (type: ProductType) => void
   setFrameOption: (frame: FrameOption) => void
   setSizeOption: (size: SizeOption) => void
+  selectPortrait: (sessionId: string) => void
   generateArtwork: () => Promise<void>
   addToCart: () => Promise<void>
   replacePhoto: () => void
@@ -83,6 +110,7 @@ export type GeneratorComputed = {
   canGenerate: boolean
   canAddToCart: boolean
   visibleFrameSection: boolean
+  visibleResultsSection: boolean
   visibleSizeSection: boolean
   price: GeneratorPrice
 }

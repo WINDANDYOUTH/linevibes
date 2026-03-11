@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useMemo, useCallback, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import { addToCart } from "@lib/data/cart"
 import { saveToHistory } from "@lib/portrait-history"
 import VariantTabSelector from "./VariantTabSelector"
@@ -18,9 +18,25 @@ import {
   CANVAS_SIZES,
 } from "../data/portrait-data"
 
+async function readJsonOrText(response: Response) {
+  const raw = await response.text()
+
+  if (!raw) {
+    return null
+  }
+
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return { error: raw }
+  }
+}
+
 type PortraitProductTemplateProps = {
   /** URL of the user-generated portrait image */
   portraitImageUrl: string
+  /** URL of the SVG version, when the backend actually produced one */
+  portraitSvgUrl?: string | null
   /** Session ID from the generation flow */
   sessionId: string
   /** Portrait style */
@@ -61,6 +77,7 @@ const REGEN_STYLES = [
 
 export default function PortraitProductTemplate({
   portraitImageUrl,
+  portraitSvgUrl = null,
   sessionId,
   portraitStyle = "classic",
   variantIds,
@@ -70,6 +87,8 @@ export default function PortraitProductTemplate({
   const [activeTab, setActiveTab] = useState<VariantType>("digital")
   const [isAdding, setIsAdding] = useState(false)
   const [currentPortraitUrl, setCurrentPortraitUrl] = useState(portraitImageUrl)
+  const [currentPortraitSvgUrl, setCurrentPortraitSvgUrl] =
+    useState(portraitSvgUrl)
   const [currentStyle, setCurrentStyle] = useState(portraitStyle)
 
   // Regeneration state
@@ -92,7 +111,6 @@ export default function PortraitProductTemplate({
   const [canvasMaterial, setCanvasMaterial] = useState("none")
 
   const countryCode = useParams().countryCode as string
-  const router = useRouter()
 
   // ─── Save to localStorage on mount ─────────────────
   useEffect(() => {
@@ -119,22 +137,43 @@ export default function PortraitProductTemplate({
         }),
       })
 
-      const data = await response.json()
+      const data = await readJsonOrText(response)
 
       if (!response.ok) {
-        throw new Error(data.error || "Regeneration failed")
+        throw new Error(
+          (data &&
+          typeof data === "object" &&
+          "error" in data &&
+          typeof data.error === "string"
+            ? data.error
+            : null) || "Regeneration failed"
+        )
       }
 
       // Update the displayed portrait
-      setCurrentPortraitUrl(data.portraitUrl)
-      setCurrentStyle(data.style)
+      const nextPortraitUrl =
+        data && typeof data === "object" && "portraitUrl" in data
+          ? (data.portraitUrl as string)
+          : currentPortraitUrl
+      const nextStyle =
+        data && typeof data === "object" && "style" in data
+          ? (data.style as string)
+          : currentStyle
+      const nextPortraitSvgUrl =
+        data && typeof data === "object" && "portraitSvgUrl" in data
+          ? (data.portraitSvgUrl as string | null) ?? null
+          : currentPortraitSvgUrl
+
+      setCurrentPortraitUrl(nextPortraitUrl)
+      setCurrentPortraitSvgUrl(nextPortraitSvgUrl)
+      setCurrentStyle(nextStyle)
       setShowRegenPanel(false)
 
       // Update localStorage
       saveToHistory({
         sessionId,
-        portraitUrl: data.portraitUrl,
-        style: data.style,
+        portraitUrl: nextPortraitUrl,
+        style: nextStyle,
         createdAt: new Date().toISOString(),
       })
     } catch (error: any) {
@@ -143,7 +182,13 @@ export default function PortraitProductTemplate({
     } finally {
       setIsRegenerating(false)
     }
-  }, [sessionId, regenStyle])
+  }, [
+    currentPortraitSvgUrl,
+    currentPortraitUrl,
+    currentStyle,
+    sessionId,
+    regenStyle,
+  ])
 
   // ─── Derived state ──────────────────────────────────
   const selectedFrameMaterial = useMemo(
@@ -176,6 +221,10 @@ export default function PortraitProductTemplate({
         includes_digital_download: "true",
       }
 
+      if (currentPortraitSvgUrl) {
+        metadata.portrait_svg_url = currentPortraitSvgUrl
+      }
+
       if (activeTab === "print") {
         metadata.selected_size = printSize
         metadata.selected_color = printColor
@@ -198,9 +247,10 @@ export default function PortraitProductTemplate({
   }, [
     activeTab,
     variantIds,
+    currentPortraitSvgUrl,
+    currentStyle,
+    portraitImageForMeta,
     sessionId,
-    portraitImageUrl,
-    portraitStyle,
     printSize,
     printColor,
     canvasSize,
@@ -225,13 +275,23 @@ export default function PortraitProductTemplate({
                 }}
               />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Regenerating your portrait...</h3>
-            <p className="text-sm text-gray-500">Using the same photo with a fresh AI interpretation. This may take 30–60 seconds.</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Regenerating your portrait...
+            </h3>
+            <p className="text-sm text-gray-500">
+              Using the same photo with a fresh AI interpretation. This may take
+              30–60 seconds.
+            </p>
           </div>
           <style jsx>{`
             @keyframes regen-pulse {
-              0%, 100% { opacity: 1; }
-              50% { opacity: 0.6; }
+              0%,
+              100% {
+                opacity: 1;
+              }
+              50% {
+                opacity: 0.6;
+              }
             }
           `}</style>
         </div>
@@ -247,8 +307,14 @@ export default function PortraitProductTemplate({
             <div className="md:sticky md:top-28">
               {/* Scene background */}
               <div className="bg-gradient-to-b from-gray-100/80 to-gray-50 rounded-2xl p-6 md:p-10 flex items-center justify-center min-h-[400px] md:min-h-[560px]">
-                <div className={`w-full max-w-[380px] transition-all duration-500 ${showFrame ? "pb-8" : ""}`}>
-                  <FrameOverlay material={showFrame ? selectedFrameMaterial : null}>
+                <div
+                  className={`w-full max-w-[380px] transition-all duration-500 ${
+                    showFrame ? "pb-8" : ""
+                  }`}
+                >
+                  <FrameOverlay
+                    material={showFrame ? selectedFrameMaterial : null}
+                  >
                     <LineArtRenderer imageUrl={currentPortraitUrl} />
                   </FrameOverlay>
                 </div>
@@ -276,7 +342,9 @@ export default function PortraitProductTemplate({
                 ) : (
                   <div className="p-4 rounded-xl border border-gray-200 bg-gray-50/50 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gray-700">Choose a style & regenerate</span>
+                      <span className="text-sm font-semibold text-gray-700">
+                        Choose a style & regenerate
+                      </span>
                       <button
                         onClick={() => setShowRegenPanel(false)}
                         className="text-gray-400 hover:text-gray-600 text-lg leading-none"
@@ -311,7 +379,9 @@ export default function PortraitProductTemplate({
                     >
                       ✨ Regenerate Portrait
                     </button>
-                    <p className="text-[11px] text-gray-400 text-center">Uses your original photo – no re-upload needed</p>
+                    <p className="text-[11px] text-gray-400 text-center">
+                      Uses your original photo – no re-upload needed
+                    </p>
                   </div>
                 )}
               </div>
@@ -384,7 +454,7 @@ export default function PortraitProductTemplate({
                     Includes Free Digital Download
                   </p>
                   <p className="text-[11px] text-gray-500">
-                    High-res PNG + SVG files sent to your email after purchase
+                    High-res PNG file sent to your email after purchase
                   </p>
                 </div>
               </div>

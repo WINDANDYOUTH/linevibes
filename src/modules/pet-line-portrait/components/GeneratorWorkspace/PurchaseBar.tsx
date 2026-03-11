@@ -25,10 +25,10 @@ export default function PurchaseBar({
     cartStatus === "adding"
       ? "Adding..."
       : generationStatus === "generating"
-      ? "Generating Required"
+      ? "Preview Updating"
       : canAddToCart
       ? "Add to Cart"
-      : "Generating Required"
+      : "Preview Required"
 
   return (
     <div className="overflow-hidden rounded-[22px] border border-stone-200 bg-white px-4 py-3 text-stone-950 shadow-[0_14px_32px_rgba(28,25,23,0.08)] xl:sticky xl:bottom-3 xl:z-20 xl:border-stone-200 xl:bg-stone-950 xl:px-4 xl:py-3 xl:text-white md:px-5">

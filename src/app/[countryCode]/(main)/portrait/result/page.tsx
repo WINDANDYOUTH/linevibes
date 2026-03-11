@@ -1,10 +1,12 @@
 import { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { listProducts } from "@lib/data/products"
-import { getRegion } from "@lib/data/regions"
 import { getProductPrice } from "@lib/util/get-product-price"
 import PortraitProductTemplate from "@modules/portrait-product/components/PortraitProductTemplate"
-import { fetchPortraitSession, isSessionValid } from "@modules/portrait-product/data/portrait-session"
+import {
+  fetchPortraitSession,
+  isSessionValid,
+} from "@modules/portrait-product/data/portrait-session"
 
 type Props = {
   params: Promise<{ countryCode: string }>
@@ -69,10 +71,11 @@ export default async function PortraitResultPage(props: Props) {
   const params = await props.params
   const searchParams = await props.searchParams
   const { sid } = searchParams
+  const restartHref = `/${params.countryCode}/line-portrait`
 
   // If no session ID, redirect to the generate page
   if (!sid) {
-    redirect(`/${params.countryCode}/line-portraits`)
+    redirect(restartHref)
   }
 
   // ─── Session Data Lookup ──────────────────────────────
@@ -88,11 +91,11 @@ export default async function PortraitResultPage(props: Props) {
             Session Expired
           </h1>
           <p className="text-gray-500 text-sm mb-6">
-            This portrait session has expired or could not be found.
-            Please generate a new portrait to continue.
+            This portrait session has expired or could not be found. Please
+            generate a new portrait to continue.
           </p>
           <a
-            href={`/${params.countryCode}/line-portraits`}
+            href={restartHref}
             className="inline-flex items-center gap-2 px-6 py-3 bg-linevibes-blue text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-colors"
           >
             Generate New Portrait
@@ -126,6 +129,7 @@ export default async function PortraitResultPage(props: Props) {
   return (
     <PortraitProductTemplate
       portraitImageUrl={portraitSession.portraitUrl}
+      portraitSvgUrl={portraitSession.portraitSvgUrl}
       sessionId={portraitSession.sessionId}
       portraitStyle={portraitSession.style}
       variantIds={variantIds}

@@ -7,17 +7,7 @@ import {
   useRef,
   useState,
 } from "react"
-import {
-  ChevronDown,
-  ChevronUp,
-  Crop,
-  Minus,
-  Move,
-  Plus,
-  RotateCcw,
-  Upload,
-  X,
-} from "lucide-react"
+import { Crop, Minus, Plus, RotateCcw, Upload, X } from "lucide-react"
 
 export type ImageUploadCropperProps = {
   sourceImageUrl: string | null
@@ -86,7 +76,9 @@ function loadImage(src: string) {
 }
 
 function getAspectPreset(aspectId: AspectPreset["id"]) {
-  return ASPECT_PRESETS.find((preset) => preset.id === aspectId) ?? ASPECT_PRESETS[2]
+  return (
+    ASPECT_PRESETS.find((preset) => preset.id === aspectId) ?? ASPECT_PRESETS[2]
+  )
 }
 
 function clampCropRect(rect: CropRect, image: HTMLImageElement) {
@@ -132,6 +124,15 @@ function createAspectCropRect(image: HTMLImageElement, ratio: number | null) {
     },
     image
   )
+}
+
+function createFullImageCropRect(image: HTMLImageElement) {
+  return {
+    x: 0,
+    y: 0,
+    width: image.width,
+    height: image.height,
+  }
 }
 
 function normalizeCropRectToAspect(
@@ -186,19 +187,31 @@ function resizeFreeformRect(
   let bottom = startRect.y + startRect.height
 
   if (handle.includes("w")) {
-    left = Math.min(startRect.x + startRect.width - MIN_CROP_SIZE, Math.max(0, left + deltaX))
+    left = Math.min(
+      startRect.x + startRect.width - MIN_CROP_SIZE,
+      Math.max(0, left + deltaX)
+    )
   }
 
   if (handle.includes("e")) {
-    right = Math.max(startRect.x + MIN_CROP_SIZE, Math.min(image.width, right + deltaX))
+    right = Math.max(
+      startRect.x + MIN_CROP_SIZE,
+      Math.min(image.width, right + deltaX)
+    )
   }
 
   if (handle.includes("n")) {
-    top = Math.min(startRect.y + startRect.height - MIN_CROP_SIZE, Math.max(0, top + deltaY))
+    top = Math.min(
+      startRect.y + startRect.height - MIN_CROP_SIZE,
+      Math.max(0, top + deltaY)
+    )
   }
 
   if (handle.includes("s")) {
-    bottom = Math.max(startRect.y + MIN_CROP_SIZE, Math.min(image.height, bottom + deltaY))
+    bottom = Math.max(
+      startRect.y + MIN_CROP_SIZE,
+      Math.min(image.height, bottom + deltaY)
+    )
   }
 
   return clampCropRect(
@@ -229,8 +242,8 @@ function resizeFixedAspectRect(
       ? Math.max(Math.abs(deltaX), Math.abs(deltaY)) *
         Math.sign(Math.abs(deltaX) >= Math.abs(deltaY) ? deltaX : deltaY)
       : xSign !== 0
-        ? deltaX
-        : deltaY
+      ? deltaX
+      : deltaY
 
   let width = startRect.width
   let height = startRect.height
@@ -288,7 +301,10 @@ function scaleCropRect(
 }
 
 function cropRectToObjectUrl(image: HTMLImageElement, cropRect: CropRect) {
-  const scale = Math.min(1, MAX_OUTPUT_DIMENSION / Math.max(cropRect.width, cropRect.height))
+  const scale = Math.min(
+    1,
+    MAX_OUTPUT_DIMENSION / Math.max(cropRect.width, cropRect.height)
+  )
   const canvas = document.createElement("canvas")
   canvas.width = Math.max(1, Math.round(cropRect.width * scale))
   canvas.height = Math.max(1, Math.round(cropRect.height * scale))
@@ -341,22 +357,12 @@ export default function ImageUploadCropper({
   const [error, setError] = useState<string | null>(null)
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
   const [isImageLoading, setIsImageLoading] = useState(false)
-  const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null)
+  const [imageElement, setImageElement] = useState<HTMLImageElement | null>(
+    null
+  )
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 })
   const [committedDraft, setCommittedDraft] = useState<CropDraft | null>(null)
   const [draft, setDraft] = useState<CropDraft | null>(null)
-  const [showCropHelp, setShowCropHelp] = useState(false)
-
-  useEffect(() => {
-    return () => {
-      if (sourceObjectUrlRef.current) {
-        URL.revokeObjectURL(sourceObjectUrlRef.current)
-      }
-      if (croppedObjectUrlRef.current) {
-        URL.revokeObjectURL(croppedObjectUrlRef.current)
-      }
-    }
-  }, [])
 
   useEffect(() => {
     if (!sourceImageUrl) {
@@ -365,6 +371,10 @@ export default function ImageUploadCropper({
       setDraft(null)
       setIsCropModalOpen(false)
       setIsImageLoading(false)
+      if (sourceObjectUrlRef.current) {
+        URL.revokeObjectURL(sourceObjectUrlRef.current)
+        sourceObjectUrlRef.current = null
+      }
       if (croppedObjectUrlRef.current) {
         URL.revokeObjectURL(croppedObjectUrlRef.current)
         croppedObjectUrlRef.current = null
@@ -382,10 +392,16 @@ export default function ImageUploadCropper({
           return
         }
 
-        const nextDraft: CropDraft = {
-          aspectId: "4:5",
-          rect: createAspectCropRect(image, getAspectPreset("4:5").ratio),
-        }
+        const shouldReuseExistingCrop = croppedImageUrl === sourceImageUrl
+        const nextDraft: CropDraft = shouldReuseExistingCrop
+          ? {
+              aspectId: "4:5",
+              rect: createFullImageCropRect(image),
+            }
+          : {
+              aspectId: "4:5",
+              rect: createAspectCropRect(image, getAspectPreset("4:5").ratio),
+            }
 
         setImageElement(image)
         setCommittedDraft(nextDraft)
@@ -404,7 +420,9 @@ export default function ImageUploadCropper({
         }
 
         const message =
-          loadError instanceof Error ? loadError.message : "Could not read image."
+          loadError instanceof Error
+            ? loadError.message
+            : "Could not read image."
         setError(message)
         setIsImageLoading(false)
       })
@@ -415,7 +433,11 @@ export default function ImageUploadCropper({
   }, [onCroppedImageChange, sourceImageUrl])
 
   useEffect(() => {
-    if (!stageRef.current || !isCropModalOpen || typeof ResizeObserver === "undefined") {
+    if (
+      !stageRef.current ||
+      !isCropModalOpen ||
+      typeof ResizeObserver === "undefined"
+    ) {
       return
     }
 
@@ -461,7 +483,23 @@ export default function ImageUploadCropper({
 
     const updateCrop = async () => {
       try {
-        const objectUrl = await cropRectToObjectUrl(imageElement, committedDraft.rect)
+        const shouldReuseExistingCrop =
+          !!croppedImageUrl &&
+          croppedImageUrl === sourceImageUrl &&
+          committedDraft.rect.x === 0 &&
+          committedDraft.rect.y === 0 &&
+          committedDraft.rect.width === imageElement.width &&
+          committedDraft.rect.height === imageElement.height
+
+        if (shouldReuseExistingCrop) {
+          onCroppedImageChange(croppedImageUrl)
+          return
+        }
+
+        const objectUrl = await cropRectToObjectUrl(
+          imageElement,
+          committedDraft.rect
+        )
 
         if (!isActive) {
           URL.revokeObjectURL(objectUrl)
@@ -476,7 +514,9 @@ export default function ImageUploadCropper({
         onCroppedImageChange(objectUrl)
       } catch (cropError) {
         const message =
-          cropError instanceof Error ? cropError.message : "Could not update crop preview."
+          cropError instanceof Error
+            ? cropError.message
+            : "Could not update crop preview."
         setError(message)
       }
     }
@@ -493,7 +533,10 @@ export default function ImageUploadCropper({
       return null
     }
 
-    const scale = Math.min(stageSize.width / imageElement.width, stageSize.height / imageElement.height)
+    const scale = Math.min(
+      stageSize.width / imageElement.width,
+      stageSize.height / imageElement.height
+    )
     const width = imageElement.width * scale
     const height = imageElement.height * scale
 
@@ -517,7 +560,9 @@ export default function ImageUploadCropper({
       : null
 
   const currentAspectPreset = getAspectPreset(draft?.aspectId ?? "4:5")
-  const currentAspectLabel = `${currentAspectPreset.label}${currentAspectPreset.recommended ? " Recommended" : ""}`
+  const currentAspectLabel = `${currentAspectPreset.label}${
+    currentAspectPreset.recommended ? " Recommended" : ""
+  }`
 
   function resetDraftToCommitted() {
     setDraft(committedDraft)
@@ -585,11 +630,19 @@ export default function ImageUploadCropper({
 
     setDraft({
       ...draft,
-      rect: scaleCropRect(draft.rect, imageElement, scaleDelta, getAspectPreset(draft.aspectId).ratio),
+      rect: scaleCropRect(
+        draft.rect,
+        imageElement,
+        scaleDelta,
+        getAspectPreset(draft.aspectId).ratio
+      ),
     })
   }
 
-  function beginDrag(event: ReactPointerEvent<HTMLElement>, nextState: DragState) {
+  function beginDrag(
+    event: ReactPointerEvent<HTMLElement>,
+    nextState: DragState
+  ) {
     dragStateRef.current = nextState
     if (stageRef.current) {
       stageRef.current.setPointerCapture(event.pointerId)
@@ -627,8 +680,21 @@ export default function ImageUploadCropper({
     setDraft({
       ...draft,
       rect: ratio
-        ? resizeFixedAspectRect(dragState.startRect, dragState.handle, deltaX, deltaY, imageElement, ratio)
-        : resizeFreeformRect(dragState.startRect, dragState.handle, deltaX, deltaY, imageElement),
+        ? resizeFixedAspectRect(
+            dragState.startRect,
+            dragState.handle,
+            deltaX,
+            deltaY,
+            imageElement,
+            ratio
+          )
+        : resizeFreeformRect(
+            dragState.startRect,
+            dragState.handle,
+            deltaX,
+            deltaY,
+            imageElement
+          ),
     })
   }
 
@@ -668,11 +734,31 @@ export default function ImageUploadCropper({
     setIsCropModalOpen(false)
   }
 
-  const handleMeta: Array<{ handle: HandleDirection; className: string; cursor: string }> = [
-    { handle: "nw", className: "left-0 top-0 -translate-x-1/2 -translate-y-1/2", cursor: "nwse-resize" },
-    { handle: "ne", className: "right-0 top-0 translate-x-1/2 -translate-y-1/2", cursor: "nesw-resize" },
-    { handle: "sw", className: "left-0 bottom-0 -translate-x-1/2 translate-y-1/2", cursor: "nesw-resize" },
-    { handle: "se", className: "right-0 bottom-0 translate-x-1/2 translate-y-1/2", cursor: "nwse-resize" },
+  const handleMeta: Array<{
+    handle: HandleDirection
+    className: string
+    cursor: string
+  }> = [
+    {
+      handle: "nw",
+      className: "left-0 top-0 -translate-x-1/2 -translate-y-1/2",
+      cursor: "nwse-resize",
+    },
+    {
+      handle: "ne",
+      className: "right-0 top-0 translate-x-1/2 -translate-y-1/2",
+      cursor: "nesw-resize",
+    },
+    {
+      handle: "sw",
+      className: "left-0 bottom-0 -translate-x-1/2 translate-y-1/2",
+      cursor: "nesw-resize",
+    },
+    {
+      handle: "se",
+      className: "right-0 bottom-0 translate-x-1/2 translate-y-1/2",
+      cursor: "nwse-resize",
+    },
   ]
 
   return (
@@ -693,114 +779,85 @@ export default function ImageUploadCropper({
         }}
       />
 
-      <button
-        type="button"
-        onClick={() => {
-          if (!sourceImageUrl) {
-            inputRef.current?.click()
-          }
-        }}
-        className={`flex min-h-[240px] w-full flex-col items-center justify-center rounded-[28px] border border-dashed border-stone-300 bg-white px-6 text-center transition ${
-          sourceImageUrl ? "cursor-default" : "hover:border-stone-500"
-        }`}
-      >
-        {sourceImageUrl ? (
-          <div className="w-full">
-            <div className="relative mx-auto aspect-[4/3] max-w-md overflow-hidden rounded-[22px] border border-stone-200 bg-stone-100">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={croppedImageUrl || sourceImageUrl}
-                alt="Uploaded pet"
-                className="h-full w-full object-contain"
-              />
-            </div>
-            <p className="mt-4 text-sm font-semibold text-stone-900">Photo uploaded</p>
-            <p className="mt-2 text-xs uppercase tracking-[0.24em] text-stone-400">
-              Preview ready for crop adjustment
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f6f1e8] text-stone-900">
-              <Upload className="h-6 w-6" />
-            </div>
-            <p className="mt-5 text-lg font-semibold text-stone-900">
-              Tap to upload your photo
-            </p>
-            <p className="mt-2 text-sm text-stone-500">JPG, PNG, WEBP up to 15MB</p>
-            <p className="mt-4 text-xs uppercase tracking-[0.24em] text-stone-400">
-              Single pet, bright lighting, face visible
-            </p>
-          </>
-        )}
-      </button>
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className={`inline-flex items-center justify-center gap-3 rounded-[14px] border px-4 py-4 text-left transition sm:min-h-[72px] ${
+              sourceImageUrl
+                ? "min-h-[64px] border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
+                : "min-h-[120px] border-[#e2ddd4] bg-[#f7f5ef] hover:border-[#cfc8bb] hover:bg-[#f4f1e8] sm:flex-1"
+            }`}
+          >
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-[12px] bg-white text-stone-900 shadow-[0_10px_20px_rgba(15,23,42,0.06)]">
+              <Upload className="h-4 w-4" />
+            </span>
+            <span>
+              <span className="block text-sm font-semibold text-stone-950">
+                {sourceImageUrl ? "Replace photo" : "Upload photo"}
+              </span>
+              <span className="mt-1 block text-xs leading-5 text-stone-500">
+                JPG, PNG, WEBP
+              </span>
+            </span>
+          </button>
 
-      {sourceImageUrl ? (
-        <div className="mt-6 rounded-[24px] border border-stone-200 bg-white p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold text-stone-950">Crop your image</p>
-              <p className="mt-1 text-sm text-stone-500">
-                Adjust framing before generation. 4:5 is the safest option for this layout.
-              </p>
-            </div>
-            <Crop className="mt-1 h-5 w-5 text-stone-400" />
-          </div>
-
-          <div className="mt-5 rounded-[20px] border border-stone-200 bg-[#faf8f3] p-4">
-            <div className="relative overflow-hidden rounded-2xl border border-stone-200 bg-white">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={croppedImageUrl || sourceImageUrl}
-                alt="Current crop"
-                className="aspect-[4/3] h-full w-full object-contain"
-              />
-            </div>
-            <div className="min-w-0 pt-4">
-              <p className="text-sm font-semibold text-stone-900">Current crop</p>
-              <p className="mt-1 text-sm leading-6 text-stone-500">
-                Ratio: <span className="font-semibold text-stone-700">{currentAspectLabel}</span>
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={openModal}
-                  className="inline-flex items-center gap-2 rounded-full bg-stone-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-stone-800"
-                >
-                  <Move className="h-4 w-4" />
-                  Edit crop
-                </button>
-                <button
-                  type="button"
-                  onClick={() => inputRef.current?.click()}
-                  className="inline-flex items-center rounded-full border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50"
-                >
-                  Replace photo
-                </button>
-                {onRemovePhoto ? (
-                  <button
-                    type="button"
-                    onClick={onRemovePhoto}
-                    className="inline-flex items-center rounded-full px-2 py-2 text-sm font-medium text-stone-500 transition hover:text-stone-900"
-                  >
-                    Remove
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          </div>
+          {sourceImageUrl ? (
+            <button
+              type="button"
+              onClick={openModal}
+              className="inline-flex min-h-[64px] items-center justify-center gap-2 rounded-[14px] border border-stone-200 bg-[#faf8f3] px-4 py-3 text-sm font-medium text-stone-700 transition hover:bg-stone-50 sm:min-w-[148px]"
+            >
+              <Crop className="h-4 w-4" />
+              Edit crop
+            </button>
+          ) : null}
         </div>
-      ) : null}
+
+        {sourceImageUrl ? (
+          <div className="overflow-hidden rounded-[16px] border border-stone-200 bg-[#faf8f3]">
+            <div className="flex items-center gap-3 p-3">
+              <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-[14px] border border-stone-200 bg-white sm:h-20 sm:w-20">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={croppedImageUrl || sourceImageUrl}
+                  alt="Current crop"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-stone-900">Crop</p>
+                <p className="mt-0.5 text-sm text-stone-500">
+                  <span className="font-semibold text-stone-700">
+                    {currentAspectLabel}
+                  </span>
+                </p>
+              </div>
+
+              {onRemovePhoto ? (
+                <button
+                  type="button"
+                  onClick={onRemovePhoto}
+                  className="self-start rounded-[10px] px-2 py-1 text-sm font-medium text-stone-500 transition hover:text-stone-900"
+                >
+                  Remove
+                </button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+      </div>
 
       {isCropModalOpen ? (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 p-2 sm:p-4 backdrop-blur-sm">
           <div className="flex max-h-[96svh] w-[calc(100vw-16px)] max-w-[1240px] flex-col overflow-hidden rounded-[28px] border border-stone-200 bg-white shadow-[0_35px_120px_rgba(0,0,0,0.28)] sm:max-h-[92vh] sm:w-full sm:rounded-[32px]">
             <div className="flex items-start justify-between gap-4 border-b border-stone-200 px-4 py-4 sm:px-6 sm:py-5">
               <div>
-                <h3 className="text-xl font-semibold text-stone-950 sm:text-2xl">Crop your image</h3>
-                <p className="mt-1 max-w-[32ch] text-sm text-stone-500">
-                  Use 4:5 for the most predictable preview framing. Freeform and other ratios will change the AI input crop.
-                </p>
+                <h3 className="text-xl font-semibold text-stone-950 sm:text-2xl">
+                  Crop
+                </h3>
               </div>
               <button
                 type="button"
@@ -852,18 +909,25 @@ export default function ImageUploadCropper({
                               left: `${imageViewport.left}px`,
                               top: `${imageViewport.top}px`,
                               width: `${imageViewport.width}px`,
-                              height: `${Math.max(0, draftCropStyle.top - imageViewport.top)}px`,
+                              height: `${Math.max(
+                                0,
+                                draftCropStyle.top - imageViewport.top
+                              )}px`,
                             }}
                           />
                           <div
                             className="pointer-events-none absolute bg-black/58"
                             style={{
                               left: `${imageViewport.left}px`,
-                              top: `${draftCropStyle.top + draftCropStyle.height}px`,
+                              top: `${
+                                draftCropStyle.top + draftCropStyle.height
+                              }px`,
                               width: `${imageViewport.width}px`,
                               height: `${Math.max(
                                 0,
-                                imageViewport.top + imageViewport.height - (draftCropStyle.top + draftCropStyle.height)
+                                imageViewport.top +
+                                  imageViewport.height -
+                                  (draftCropStyle.top + draftCropStyle.height)
                               )}px`,
                             }}
                           />
@@ -872,18 +936,25 @@ export default function ImageUploadCropper({
                             style={{
                               left: `${imageViewport.left}px`,
                               top: `${draftCropStyle.top}px`,
-                              width: `${Math.max(0, draftCropStyle.left - imageViewport.left)}px`,
+                              width: `${Math.max(
+                                0,
+                                draftCropStyle.left - imageViewport.left
+                              )}px`,
                               height: `${draftCropStyle.height}px`,
                             }}
                           />
                           <div
                             className="pointer-events-none absolute bg-black/58"
                             style={{
-                              left: `${draftCropStyle.left + draftCropStyle.width}px`,
+                              left: `${
+                                draftCropStyle.left + draftCropStyle.width
+                              }px`,
                               top: `${draftCropStyle.top}px`,
                               width: `${Math.max(
                                 0,
-                                imageViewport.left + imageViewport.width - (draftCropStyle.left + draftCropStyle.width)
+                                imageViewport.left +
+                                  imageViewport.width -
+                                  (draftCropStyle.left + draftCropStyle.width)
                               )}px`,
                               height: `${draftCropStyle.height}px`,
                             }}
@@ -907,7 +978,10 @@ export default function ImageUploadCropper({
                           >
                             <div className="pointer-events-none absolute inset-0 grid grid-cols-3 grid-rows-3">
                               {Array.from({ length: 9 }).map((_, index) => (
-                                <div key={index} className="border border-white/30" />
+                                <div
+                                  key={index}
+                                  className="border border-white/30"
+                                />
                               ))}
                             </div>
                             {handleMeta.map(({ handle, className, cursor }) => (
@@ -939,10 +1013,10 @@ export default function ImageUploadCropper({
                 </div>
               </div>
 
-              <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain bg-[#fcfbf8] p-4 pb-5 sm:p-5 lg:p-6">
+              <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain bg-[#fcfbf8] p-4 pb-4 sm:p-5 lg:p-6">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-400">
-                    Aspect Ratio
+                    Ratio
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {ASPECT_PRESETS.map((preset) => {
@@ -992,7 +1066,10 @@ export default function ImageUploadCropper({
 
                         setDraft({
                           aspectId: draft.aspectId,
-                          rect: createAspectCropRect(imageElement, getAspectPreset(draft.aspectId).ratio),
+                          rect: createAspectCropRect(
+                            imageElement,
+                            getAspectPreset(draft.aspectId).ratio
+                          ),
                         })
                       }}
                       className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:border-stone-400"
@@ -1000,39 +1077,11 @@ export default function ImageUploadCropper({
                       <RotateCcw className="h-4 w-4" />
                       Reset
                     </button>
-                    <button
-                      type="button"
-                      onClick={applyCrop}
-                      className="inline-flex items-center rounded-full bg-[#b33e56] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#9d364c] lg:hidden"
-                    >
-                      Apply crop
-                    </button>
                   </div>
                 </div>
 
-                <div className="rounded-[20px] border border-stone-200 bg-white">
-                  <button
-                    type="button"
-                    onClick={() => setShowCropHelp((current) => !current)}
-                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-stone-900">Crop guidance</p>
-                      <p className="mt-1 text-sm text-stone-500">
-                        Ratio: <span className="font-semibold text-stone-700">{currentAspectLabel}</span>
-                      </p>
-                    </div>
-                    {showCropHelp ? (
-                      <ChevronUp className="h-4 w-4 text-stone-400" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-stone-400" />
-                    )}
-                  </button>
-                  {showCropHelp ? (
-                    <div className="border-t border-stone-200 px-4 py-3 text-sm leading-6 text-stone-500">
-                      4:5 is the safest option because the preview uses a portrait frame. On mobile, drag the crop box and use the larger corner handles to resize. Different ratios can change the generated composition.
-                    </div>
-                  ) : null}
+                <div className="rounded-[20px] border border-stone-200 bg-white px-4 py-3 text-sm text-stone-500">
+                  Drag to move. Corners resize.
                 </div>
               </div>
             </div>

@@ -16,11 +16,11 @@ export type PortraitSession = {
   /** URL to the generated portrait image (PNG) */
   portraitUrl: string
   /** URL to the SVG version (if available) */
-  portraitSvgUrl: string
+  portraitSvgUrl: string | null
   /** URL to the original uploaded photo */
   originalUrl: string
   /** Thumbnail URL for previews */
-  thumbnailUrl: string
+  thumbnailUrl: string | null
   /** Selected art style */
   style: string
   /** Error message if generation failed */

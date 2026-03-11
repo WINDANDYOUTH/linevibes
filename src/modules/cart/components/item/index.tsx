@@ -14,6 +14,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Spinner from "@modules/common/icons/spinner"
 import Thumbnail from "@modules/products/components/thumbnail"
 import { useState } from "react"
+import { getPortraitLineItemMetadata } from "@lib/util/portrait-line-item-metadata"
 
 type ItemProps = {
   item: HttpTypes.StoreCartLineItem
@@ -27,18 +28,17 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const [error, setError] = useState<string | null>(null)
 
   // Portrait item detection
-  const metadata = (item as any).metadata as Record<string, string> | undefined
-  const isPortraitItem = !!metadata?.portrait_session_id
-  const portraitThumbnail = metadata?.portrait_image_url || null
-  const portraitSessionId = metadata?.portrait_session_id
+  const metadata = (item as any).metadata as Record<string, unknown> | undefined
+  const portraitMeta = getPortraitLineItemMetadata(metadata)
 
   // Use portrait image as thumbnail if available, otherwise fall back to product thumbnail
-  const effectiveThumbnail = portraitThumbnail || item.thumbnail
+  const effectiveThumbnail = portraitMeta.portraitImageUrl || item.thumbnail
 
   // Link to portrait result page for portrait items, product page for regular items
-  const itemHref = isPortraitItem && portraitSessionId
-    ? `/portrait/result?sid=${portraitSessionId}`
-    : `/products/${item.product_handle}`
+  const itemHref =
+    portraitMeta.isPortraitItem && portraitMeta.portraitSessionId
+      ? `/portrait/result?sid=${portraitMeta.portraitSessionId}`
+      : `/products/${item.product_handle}`
 
   const getAnalyticsItemBase = () => ({
     id: item.variant_id || item.variant?.id || item.id,

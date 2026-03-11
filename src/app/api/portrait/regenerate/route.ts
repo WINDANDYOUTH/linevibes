@@ -8,22 +8,24 @@
  * Flow:
  * 1. Look up the existing session in PostgreSQL
  * 2. Verify it has an original_url (photo already in R2)
- * 3. Call Together AI again to generate a new portrait
- * 4. Download the result and upload to R2 (overwriting previous portrait)
- * 5. Update the session record
- * 6. Return updated data
+ * 3. Download the original image from R2
+ * 4. Call Gemini again to generate a new portrait
+ * 5. Upload the result to R2 (overwriting previous portrait)
+ * 6. Update the session record
+ * 7. Return updated data
  *
  * Body: { sessionId: string, style?: string }
  */
 import { NextRequest, NextResponse } from "next/server"
-import { getPool } from "@lib/db"
-import { ensurePortraitSessionsTable } from "@lib/db/init"
-import { uploadToR2, portraitKey } from "@lib/r2"
+
 import {
-  generateLinePortrait,
   downloadImage,
+  generateLinePortrait,
   type PortraitStyle,
 } from "@lib/ai/generate-portrait"
+import { getPool } from "@lib/db"
+import { ensurePortraitSessionsTable } from "@lib/db/init"
+import { portraitKey, uploadToR2 } from "@lib/r2"
 
 export const maxDuration = 120
 export const dynamic = "force-dynamic"
@@ -37,13 +39,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (!sessionId) {
-      return NextResponse.json(
-        { error: "Missing sessionId" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Missing sessionId" }, { status: 400 })
     }
 
-    // ─── 1. Look up existing session ───────────────────
     await ensurePortraitSessionsTable()
     const pool = getPool()
 
@@ -55,15 +53,11 @@ export async function POST(request: NextRequest) {
     )
 
     if (result.rows.length === 0) {
-      return NextResponse.json(
-        { error: "Session not found" },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: "Session not found" }, { status: 404 })
     }
 
     const session = result.rows[0]
 
-    // ─── 2. Verify original photo exists ───────────────
     if (!session.original_url) {
       return NextResponse.json(
         { error: "No original photo found for this session" },
@@ -71,14 +65,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use new style if provided, otherwise keep original
     const targetStyle = style || session.style || "classic"
 
-    // ─── 3. Mark as regenerating ───────────────────────
     await pool.query(
       `UPDATE portrait_sessions
        SET status = 'generating',
            style = $1,
+           portrait_svg_url = NULL,
            error_message = NULL,
            updated_at = NOW()
        WHERE id = $2`,
@@ -89,32 +82,40 @@ export async function POST(request: NextRequest) {
       `[Portrait] Regenerating session: ${sessionId} (style: ${targetStyle})`
     )
 
-    // ─── 4. Call Together AI with the existing original ─
     let portraitUrl: string
+    let provider: string
+    let model: string
+
     try {
-      const generatedUrl = await generateLinePortrait(
-        session.original_url,
-        targetStyle
+      const { buffer: originalBuffer, mimeType } = await downloadImage(
+        session.original_url
+      )
+      const result = await generateLinePortrait(
+        originalBuffer,
+        mimeType,
+        targetStyle,
+        session.original_url
+      )
+      provider = result.provider
+      model = result.model
+      const portraitR2Key = portraitKey(sessionId, "portrait.png")
+      portraitUrl = await uploadToR2(portraitR2Key, result.buffer, "image/png")
+
+      console.log(
+        `[Portrait] Regenerated portrait uploaded: ${portraitUrl} (${provider}:${model})`
       )
 
-      // ─── 5. Download & Upload to R2 ──────────────────
-      const generatedBuffer = await downloadImage(generatedUrl)
-      const portraitR2Key = portraitKey(sessionId, "portrait.png")
-      portraitUrl = await uploadToR2(portraitR2Key, generatedBuffer, "image/png")
-
-      console.log(`[Portrait] Regenerated portrait uploaded: ${portraitUrl}`)
-
-      // ─── 6. Update session – Completed ───────────────
       await pool.query(
         `UPDATE portrait_sessions
          SET status = 'completed',
              portrait_url = $1,
+             portrait_svg_url = NULL,
              updated_at = NOW()
          WHERE id = $2`,
         [portraitUrl, sessionId]
       )
     } catch (aiError: any) {
-      console.error(`[Portrait] Regeneration failed:`, aiError)
+      console.error("[Portrait] Regeneration failed:", aiError)
 
       await pool.query(
         `UPDATE portrait_sessions
@@ -135,18 +136,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // ─── 7. Return Success ─────────────────────────────
     return NextResponse.json({
       sessionId,
       portraitUrl,
+      portraitSvgUrl: null,
       originalUrl: session.original_url,
       style: targetStyle,
+      provider,
+      model,
       status: "completed",
     })
   } catch (error: any) {
     console.error("[Portrait] Regenerate unexpected error:", error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error: "Internal server error",
+        ...(process.env.NODE_ENV !== "production"
+          ? { details: error instanceof Error ? error.message : String(error) }
+          : {}),
+      },
       { status: 500 }
     )
   }

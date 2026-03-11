@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import type {
   GeneratorActions,
   GeneratorComputed,
   GeneratorState,
+  GeneratorTabId,
   PortraitStyle,
 } from "../../types/generator"
 import ConfiguratorPanel from "./ConfiguratorPanel"
@@ -26,6 +27,13 @@ export default function GeneratorWorkspace({
   computed,
   styles,
 }: GeneratorWorkspaceProps) {
+  const [activeTab, setActiveTab] = useState<GeneratorTabId>("upload")
+  const previousPortraitCountRef = useRef(state.generatedPortraits.length)
+  const showMobilePurchaseBar =
+    !!state.aiInput.sourceImageUrl ||
+    !!state.aiInput.croppedImageUrl ||
+    !!state.generatedArtwork.imageUrl
+
   useEffect(() => {
     const root = document.documentElement
     const isWorkspaceActive = !!state.aiInput.sourceImageUrl
@@ -37,10 +45,91 @@ export default function GeneratorWorkspace({
     }
   }, [state.aiInput.sourceImageUrl])
 
+  useEffect(() => {
+    if (state.generatedPortraits.length > previousPortraitCountRef.current) {
+      setActiveTab("results")
+    }
+
+    previousPortraitCountRef.current = state.generatedPortraits.length
+  }, [state.generatedPortraits.length])
+
+  useEffect(() => {
+    if (!state.aiInput.sourceImageUrl && activeTab !== "upload") {
+      setActiveTab("upload")
+      return
+    }
+
+    if (
+      state.aiInput.sourceImageUrl &&
+      state.generatedPortraits.length === 0 &&
+      activeTab === "results"
+    ) {
+      setActiveTab("style")
+    }
+  }, [activeTab, state.aiInput.sourceImageUrl, state.generatedPortraits.length])
+
+  const previewAction = useMemo(() => {
+    const hasCurrentPortrait = !!state.generatedArtwork.imageUrl
+
+    if (state.generationStatus === "generating") {
+      return null
+    }
+
+    if (!state.aiInput.sourceImageUrl) {
+      return {
+        label: "Upload Photo",
+        onClick: () => setActiveTab("upload"),
+      }
+    }
+
+    if (!state.aiInput.croppedImageUrl) {
+      return {
+        label: "Edit Crop",
+        onClick: () => setActiveTab("upload"),
+      }
+    }
+
+    if (!hasCurrentPortrait || computed.needsRegeneration) {
+      if (activeTab !== "style") {
+        return {
+          label: "Choose Style",
+          onClick: () => setActiveTab("style"),
+        }
+      }
+
+      return {
+        label: "Generate Portrait",
+        onClick: () => {
+          void actions.generateArtwork()
+        },
+        disabled: !computed.canGenerate,
+      }
+    }
+
+    if (!state.activePortraitSessionId) {
+      return {
+        label: "Choose Portrait",
+        onClick: () => setActiveTab("results"),
+      }
+    }
+
+    return null
+  }, [
+    actions,
+    activeTab,
+    computed.canGenerate,
+    computed.needsRegeneration,
+    state.activePortraitSessionId,
+    state.aiInput.croppedImageUrl,
+    state.aiInput.sourceImageUrl,
+    state.generatedArtwork.imageUrl,
+    state.generationStatus,
+  ])
+
   return (
-    <section id="generator" className="bg-white py-20 md:py-28">
+    <section id="generator" className="bg-[#f4f4f2] py-16 md:py-24">
       <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-5 lg:px-6 xl:px-8">
-        <div className="max-w-3xl">
+        <div className="mx-auto max-w-3xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-stone-500">
             Create Your Portrait
           </p>
@@ -48,14 +137,12 @@ export default function GeneratorWorkspace({
             Build Your Pet Portrait Before You Order
           </h2>
           <p className="mt-4 text-base leading-7 text-stone-600 md:text-lg">
-            Upload a photo, crop the artwork area, choose a style, generate the
-            preview, then configure the final product without retriggering AI for
-            presentation-only changes.
+            Upload a photo, crop it, choose a style, personalize the final
+            artwork, then review the price before checkout.
           </p>
         </div>
 
         <GeneratorWorkspaceLayout
-          hasStartedEditing={!!state.aiInput.sourceImageUrl}
           preview={
             <PreviewPanel
               sourceImageUrl={state.aiInput.sourceImageUrl}
@@ -72,10 +159,8 @@ export default function GeneratorWorkspace({
               generationStatus={state.generationStatus}
               needsRegeneration={computed.needsRegeneration}
               generationError={state.generationError}
-              canGenerate={computed.canGenerate}
-              onGenerate={() => {
-                void actions.generateArtwork()
-              }}
+              portraitCount={state.generatedPortraits.length}
+              primaryAction={previewAction}
             />
           }
           configurator={
@@ -84,27 +169,23 @@ export default function GeneratorWorkspace({
               actions={actions}
               computed={computed}
               styles={styles}
-              purchaseBar={
-                <PurchaseBar
-                  price={computed.price}
-                  canAddToCart={computed.canAddToCart}
-                  cartStatus={state.cartStatus}
-                  generationStatus={state.generationStatus}
-                  cartError={state.cartError}
-                  onAddToCart={actions.addToCart}
-                />
-              }
+              activeTab={activeTab}
+              onActiveTabChange={setActiveTab}
             />
           }
           purchaseBar={
-            <PurchaseBar
-              price={computed.price}
-              canAddToCart={computed.canAddToCart}
-              cartStatus={state.cartStatus}
-              generationStatus={state.generationStatus}
-              cartError={state.cartError}
-              onAddToCart={actions.addToCart}
-            />
+            showMobilePurchaseBar ? (
+              <PurchaseBar
+                price={computed.price}
+                canAddToCart={computed.canAddToCart}
+                cartStatus={state.cartStatus}
+                generationStatus={state.generationStatus}
+                cartError={state.cartError}
+                onAddToCart={() => {
+                  void actions.addToCart()
+                }}
+              />
+            ) : null
           }
         />
       </div>
