@@ -19,6 +19,8 @@ export type PortraitSession = {
   portraitSvgUrl: string | null
   /** URL to the original uploaded photo */
   originalUrl: string
+  /** URL to the cropped generation input, when different from the original */
+  croppedUrl: string | null
   /** Thumbnail URL for previews */
   thumbnailUrl: string | null
   /** Selected art style */
@@ -62,6 +64,7 @@ export async function fetchPortraitSession(
            status,
            style,
            original_url AS "originalUrl",
+           cropped_url AS "croppedUrl",
            portrait_url AS "portraitUrl",
            portrait_svg_url AS "portraitSvgUrl",
            thumbnail_url AS "thumbnailUrl",

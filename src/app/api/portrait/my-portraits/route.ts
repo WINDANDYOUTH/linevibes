@@ -31,6 +31,7 @@ export async function GET() {
          status,
          style,
          original_url AS "originalUrl",
+         cropped_url AS "croppedUrl",
          portrait_url AS "portraitUrl",
          created_at AS "createdAt",
          expires_at AS "expiresAt"

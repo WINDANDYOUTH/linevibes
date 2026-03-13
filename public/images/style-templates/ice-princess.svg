@@ -1,0 +1,27 @@
+<svg width="900" height="1200" viewBox="0 0 900 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="180" y1="60" x2="730" y2="1100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A3F91"/>
+      <stop offset="0.5" stop-color="#2396D4"/>
+      <stop offset="1" stop-color="#D6F1FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="1200" rx="72" fill="url(#bg)"/>
+  <path d="M0 980C134 936 242 912 372 918C528 926 696 986 900 1080V1200H0V980Z" fill="#092652"/>
+  <path d="M630 302L662 188L694 302H744L704 360L722 462L630 416L538 462L556 360L516 302H566L598 188L630 302Z" fill="#EAF8FF" fill-opacity="0.72"/>
+  <path d="M612 520H702V866H612V520Z" fill="#DDF7FF" fill-opacity="0.46"/>
+  <path d="M672 436L724 520H620L672 436Z" fill="#F4FDFF" fill-opacity="0.82"/>
+  <path d="M544 608H608V864H544V608Z" fill="#C9EEFF" fill-opacity="0.4"/>
+  <path d="M748 608H812V864H748V608Z" fill="#C9EEFF" fill-opacity="0.4"/>
+  <path d="M576 550L612 608H540L576 550Z" fill="#F4FDFF" fill-opacity="0.68"/>
+  <path d="M780 550L816 608H744L780 550Z" fill="#F4FDFF" fill-opacity="0.68"/>
+  <circle cx="458" cy="458" r="76" fill="#F4FBFF" fill-opacity="0.94"/>
+  <path d="M364 848C388 702 448 628 458 628C468 628 528 702 552 848" stroke="#ECFBFF" stroke-width="66" stroke-linecap="round"/>
+  <path d="M402 718L458 652L514 718" stroke="#CBF1FF" stroke-width="30" stroke-linecap="round"/>
+  <path d="M425 400L446 362H470L491 400L458 430L425 400Z" fill="#FFF6A8"/>
+  <path d="M144 218L156 192L168 218L194 230L168 242L156 268L144 242L118 230L144 218Z" fill="#E9FDFF"/>
+  <path d="M768 188L782 158L796 188L826 202L796 216L782 246L768 216L738 202L768 188Z" fill="#E9FDFF"/>
+  <path d="M204 566L214 544L224 566L246 576L224 586L214 608L204 586L182 576L204 566Z" fill="#E9FDFF"/>
+  <path d="M726 660L736 638L746 660L768 670L746 680L736 702L726 680L704 670L726 660Z" fill="#E9FDFF"/>
+  <path d="M94 1004H800" stroke="#C7EEFF" stroke-width="8" stroke-linecap="round" stroke-dasharray="1 26"/>
+</svg>

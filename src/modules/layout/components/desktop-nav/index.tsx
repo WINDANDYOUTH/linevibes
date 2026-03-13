@@ -69,6 +69,7 @@ const occasionsMegaMenu = {
 // Navigation items for desktop header
 const navItems = [
   { name: "Line Portraits", href: "/", megaMenuKey: null, isHighlighted: true },
+  { name: "Portrait Styles", href: "/portraits", megaMenuKey: null },
   { name: "Shop", href: "/store", megaMenuKey: "shop" },
   { name: "Occasions", href: "/collections/occasions", megaMenuKey: "occasions" },
   { name: "Our Story", href: "/about", megaMenuKey: null },

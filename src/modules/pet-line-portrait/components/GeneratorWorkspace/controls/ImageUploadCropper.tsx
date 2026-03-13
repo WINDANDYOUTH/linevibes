@@ -15,6 +15,9 @@ export type ImageUploadCropperProps = {
   onSourceImageChange: (url: string | null) => void
   onCroppedImageChange: (url: string | null) => void
   onRemovePhoto?: () => void
+  defaultAspectId?: AspectPreset["id"]
+  showAspectControls?: boolean
+  showAspectSummary?: boolean
 }
 
 type CropRect = {
@@ -77,8 +80,21 @@ function loadImage(src: string) {
 
 function getAspectPreset(aspectId: AspectPreset["id"]) {
   return (
-    ASPECT_PRESETS.find((preset) => preset.id === aspectId) ?? ASPECT_PRESETS[2]
+    ASPECT_PRESETS.find((preset) => preset.id === aspectId) ?? ASPECT_PRESETS[0]
   )
+}
+
+function createDefaultCropRect(
+  image: HTMLImageElement,
+  aspectId: AspectPreset["id"]
+) {
+  const preset = getAspectPreset(aspectId)
+
+  if (!preset.ratio) {
+    return createFullImageCropRect(image)
+  }
+
+  return createAspectCropRect(image, preset.ratio)
 }
 
 function clampCropRect(rect: CropRect, image: HTMLImageElement) {
@@ -346,6 +362,9 @@ export default function ImageUploadCropper({
   onSourceImageChange,
   onCroppedImageChange,
   onRemovePhoto,
+  defaultAspectId = "free",
+  showAspectControls = false,
+  showAspectSummary = false,
 }: ImageUploadCropperProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -353,6 +372,7 @@ export default function ImageUploadCropper({
   const croppedObjectUrlRef = useRef<string | null>(null)
   const dragStateRef = useRef<DragState | null>(null)
   const autoOpenCropperRef = useRef(false)
+  const onCroppedImageChangeRef = useRef(onCroppedImageChange)
 
   const [error, setError] = useState<string | null>(null)
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
@@ -363,6 +383,10 @@ export default function ImageUploadCropper({
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 })
   const [committedDraft, setCommittedDraft] = useState<CropDraft | null>(null)
   const [draft, setDraft] = useState<CropDraft | null>(null)
+
+  useEffect(() => {
+    onCroppedImageChangeRef.current = onCroppedImageChange
+  }, [onCroppedImageChange])
 
   useEffect(() => {
     if (!sourceImageUrl) {
@@ -379,7 +403,7 @@ export default function ImageUploadCropper({
         URL.revokeObjectURL(croppedObjectUrlRef.current)
         croppedObjectUrlRef.current = null
       }
-      onCroppedImageChange(null)
+      onCroppedImageChangeRef.current(null)
       return
     }
 
@@ -392,16 +416,10 @@ export default function ImageUploadCropper({
           return
         }
 
-        const shouldReuseExistingCrop = croppedImageUrl === sourceImageUrl
-        const nextDraft: CropDraft = shouldReuseExistingCrop
-          ? {
-              aspectId: "4:5",
-              rect: createFullImageCropRect(image),
-            }
-          : {
-              aspectId: "4:5",
-              rect: createAspectCropRect(image, getAspectPreset("4:5").ratio),
-            }
+        const nextDraft: CropDraft = {
+          aspectId: defaultAspectId,
+          rect: createDefaultCropRect(image, defaultAspectId),
+        }
 
         setImageElement(image)
         setCommittedDraft(nextDraft)
@@ -430,7 +448,7 @@ export default function ImageUploadCropper({
     return () => {
       isActive = false
     }
-  }, [onCroppedImageChange, sourceImageUrl])
+  }, [defaultAspectId, sourceImageUrl])
 
   useEffect(() => {
     if (
@@ -492,7 +510,7 @@ export default function ImageUploadCropper({
           committedDraft.rect.height === imageElement.height
 
         if (shouldReuseExistingCrop) {
-          onCroppedImageChange(croppedImageUrl)
+          onCroppedImageChangeRef.current(croppedImageUrl)
           return
         }
 
@@ -511,7 +529,7 @@ export default function ImageUploadCropper({
         }
 
         croppedObjectUrlRef.current = objectUrl
-        onCroppedImageChange(objectUrl)
+        onCroppedImageChangeRef.current(objectUrl)
       } catch (cropError) {
         const message =
           cropError instanceof Error
@@ -526,7 +544,7 @@ export default function ImageUploadCropper({
     return () => {
       isActive = false
     }
-  }, [committedDraft, imageElement, onCroppedImageChange, sourceImageUrl])
+  }, [committedDraft, imageElement, sourceImageUrl])
 
   const imageViewport = useMemo(() => {
     if (!imageElement || !stageSize.width || !stageSize.height) {
@@ -559,7 +577,7 @@ export default function ImageUploadCropper({
         }
       : null
 
-  const currentAspectPreset = getAspectPreset(draft?.aspectId ?? "4:5")
+  const currentAspectPreset = getAspectPreset(draft?.aspectId ?? defaultAspectId)
   const currentAspectLabel = `${currentAspectPreset.label}${
     currentAspectPreset.recommended ? " Recommended" : ""
   }`
@@ -829,11 +847,17 @@ export default function ImageUploadCropper({
 
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-stone-900">Crop</p>
-                <p className="mt-0.5 text-sm text-stone-500">
-                  <span className="font-semibold text-stone-700">
-                    {currentAspectLabel}
-                  </span>
-                </p>
+                {showAspectSummary ? (
+                  <p className="mt-0.5 text-sm text-stone-500">
+                    <span className="font-semibold text-stone-700">
+                      {currentAspectLabel}
+                    </span>
+                  </p>
+                ) : (
+                  <p className="mt-0.5 text-sm text-stone-500">
+                    Focus the face or keep more full-body detail.
+                  </p>
+                )}
               </div>
 
               {onRemovePhoto ? (
@@ -1014,30 +1038,32 @@ export default function ImageUploadCropper({
               </div>
 
               <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain bg-[#fcfbf8] p-4 pb-4 sm:p-5 lg:p-6">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-400">
-                    Ratio
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {ASPECT_PRESETS.map((preset) => {
-                      const selected = draft?.aspectId === preset.id
-                      return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => handleAspectChange(preset.id)}
-                          className={`rounded-full border px-4 py-2 text-sm transition ${
-                            selected
-                              ? "border-stone-950 bg-stone-950 text-white"
-                              : "border-stone-200 bg-white text-stone-700 hover:border-stone-400"
-                          }`}
-                        >
-                          <span className="font-semibold">{preset.label}</span>
-                        </button>
-                      )
-                    })}
+                {showAspectControls ? (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-400">
+                      Ratio
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {ASPECT_PRESETS.map((preset) => {
+                        const selected = draft?.aspectId === preset.id
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => handleAspectChange(preset.id)}
+                            className={`rounded-full border px-4 py-2 text-sm transition ${
+                              selected
+                                ? "border-stone-950 bg-stone-950 text-white"
+                                : "border-stone-200 bg-white text-stone-700 hover:border-stone-400"
+                            }`}
+                          >
+                            <span className="font-semibold">{preset.label}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
+                ) : null}
 
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -1066,9 +1092,9 @@ export default function ImageUploadCropper({
 
                         setDraft({
                           aspectId: draft.aspectId,
-                          rect: createAspectCropRect(
+                          rect: createDefaultCropRect(
                             imageElement,
-                            getAspectPreset(draft.aspectId).ratio
+                            draft.aspectId
                           ),
                         })
                       }}

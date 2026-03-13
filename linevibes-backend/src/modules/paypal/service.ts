@@ -69,12 +69,15 @@ const ZERO_DECIMAL_CURRENCIES = new Set([
   "xpf",
 ])
 
+type PayPalWebhookHeaders = Record<string, string>
+
 const formatPayPalAmount = (
-  amount: BigNumber | number | string,
+  amount: unknown,
   currencyCode: string
 ) => {
   const normalizedCurrency = currencyCode.toLowerCase()
-  const numericAmount = Number(amount)
+  const rawAmount = amount instanceof BigNumber ? amount.toString() : amount
+  const numericAmount = Number(rawAmount)
 
   if (!Number.isFinite(numericAmount)) {
     throw new MedusaError(
@@ -88,6 +91,18 @@ const formatPayPalAmount = (
   }
 
   return numericAmount.toFixed(2)
+}
+
+function normalizeWebhookHeaders(headers: Record<string, unknown> | undefined): PayPalWebhookHeaders {
+  if (!headers) {
+    return {}
+  }
+
+  return Object.fromEntries(
+    Object.entries(headers).flatMap(([key, value]) =>
+      typeof value === "string" ? [[key.toLowerCase(), value]] : []
+    )
+  )
 }
 
 class PayPalPaymentProviderService extends AbstractPaymentProvider<Options> {
@@ -531,9 +546,9 @@ class PayPalPaymentProviderService extends AbstractPaymentProvider<Options> {
   }
 
   async verifyWebhookSignature(
-    headers: Record<string, string>,
+    headers: PayPalWebhookHeaders,
     data: unknown,
-    rawData: string
+    rawData: string | Buffer
   ): Promise<boolean> {
     // If no webhook_id is configured, skip verification
     if (!this.options_.webhook_id) {
@@ -568,10 +583,11 @@ class PayPalPaymentProviderService extends AbstractPaymentProvider<Options> {
   ): Promise<WebhookActionResult> {
     try {
       const { data, rawData, headers } = payload
+      const normalizedHeaders = normalizeWebhookHeaders(headers)
 
       // Verify webhook signature
       const isValid = await this.verifyWebhookSignature(
-        headers || {},
+        normalizedHeaders,
         data,
         rawData || ""
       )

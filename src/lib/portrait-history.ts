@@ -15,6 +15,7 @@ export type PortraitHistoryEntry = {
   sessionId: string
   portraitUrl: string
   originalUrl?: string
+  croppedUrl?: string
   style: string
   createdAt: string // ISO string
 }

@@ -129,6 +129,8 @@ export default async function PortraitResultPage(props: Props) {
   return (
     <PortraitProductTemplate
       portraitImageUrl={portraitSession.portraitUrl}
+      originalImageUrl={portraitSession.originalUrl}
+      croppedImageUrl={portraitSession.croppedUrl}
       portraitSvgUrl={portraitSession.portraitSvgUrl}
       sessionId={portraitSession.sessionId}
       portraitStyle={portraitSession.style}

@@ -35,6 +35,10 @@ async function readJsonOrText(response: Response) {
 type PortraitProductTemplateProps = {
   /** URL of the user-generated portrait image */
   portraitImageUrl: string
+  /** URL of the original uploaded photo */
+  originalImageUrl?: string | null
+  /** URL of the cropped generation input */
+  croppedImageUrl?: string | null
   /** URL of the SVG version, when the backend actually produced one */
   portraitSvgUrl?: string | null
   /** Session ID from the generation flow */
@@ -77,6 +81,8 @@ const REGEN_STYLES = [
 
 export default function PortraitProductTemplate({
   portraitImageUrl,
+  originalImageUrl = null,
+  croppedImageUrl = null,
   portraitSvgUrl = null,
   sessionId,
   portraitStyle = "classic",
@@ -87,6 +93,8 @@ export default function PortraitProductTemplate({
   const [activeTab, setActiveTab] = useState<VariantType>("digital")
   const [isAdding, setIsAdding] = useState(false)
   const [currentPortraitUrl, setCurrentPortraitUrl] = useState(portraitImageUrl)
+  const [currentOriginalUrl, setCurrentOriginalUrl] = useState(originalImageUrl)
+  const [currentCroppedUrl, setCurrentCroppedUrl] = useState(croppedImageUrl)
   const [currentPortraitSvgUrl, setCurrentPortraitSvgUrl] =
     useState(portraitSvgUrl)
   const [currentStyle, setCurrentStyle] = useState(portraitStyle)
@@ -118,11 +126,13 @@ export default function PortraitProductTemplate({
       saveToHistory({
         sessionId,
         portraitUrl: currentPortraitUrl,
+        originalUrl: currentOriginalUrl ?? undefined,
+        croppedUrl: currentCroppedUrl ?? undefined,
         style: currentStyle,
         createdAt: new Date().toISOString(),
       })
     }
-  }, [sessionId, currentPortraitUrl, currentStyle])
+  }, [sessionId, currentCroppedUrl, currentOriginalUrl, currentPortraitUrl, currentStyle])
 
   // ─── Regenerate Handler ────────────────────────────
   const handleRegenerate = useCallback(async () => {
@@ -163,8 +173,18 @@ export default function PortraitProductTemplate({
         data && typeof data === "object" && "portraitSvgUrl" in data
           ? (data.portraitSvgUrl as string | null) ?? null
           : currentPortraitSvgUrl
+      const nextOriginalUrl =
+        data && typeof data === "object" && "originalUrl" in data
+          ? (data.originalUrl as string | null) ?? null
+          : currentOriginalUrl
+      const nextCroppedUrl =
+        data && typeof data === "object" && "croppedUrl" in data
+          ? (data.croppedUrl as string | null) ?? nextOriginalUrl
+          : currentCroppedUrl
 
       setCurrentPortraitUrl(nextPortraitUrl)
+      setCurrentOriginalUrl(nextOriginalUrl)
+      setCurrentCroppedUrl(nextCroppedUrl)
       setCurrentPortraitSvgUrl(nextPortraitSvgUrl)
       setCurrentStyle(nextStyle)
       setShowRegenPanel(false)
@@ -173,6 +193,8 @@ export default function PortraitProductTemplate({
       saveToHistory({
         sessionId,
         portraitUrl: nextPortraitUrl,
+        originalUrl: nextOriginalUrl ?? undefined,
+        croppedUrl: nextCroppedUrl ?? undefined,
         style: nextStyle,
         createdAt: new Date().toISOString(),
       })
@@ -183,6 +205,8 @@ export default function PortraitProductTemplate({
       setIsRegenerating(false)
     }
   }, [
+    currentCroppedUrl,
+    currentOriginalUrl,
     currentPortraitSvgUrl,
     currentPortraitUrl,
     currentStyle,
@@ -217,6 +241,8 @@ export default function PortraitProductTemplate({
         portrait_session_id: sessionId,
         portrait_image_url: portraitImageForMeta,
         portrait_style: currentStyle,
+        source_image_url: currentOriginalUrl ?? "",
+        cropped_image_url: currentCroppedUrl ?? currentOriginalUrl ?? "",
         variant_type: activeTab,
         includes_digital_download: "true",
       }
@@ -248,6 +274,8 @@ export default function PortraitProductTemplate({
     activeTab,
     variantIds,
     currentPortraitSvgUrl,
+    currentOriginalUrl,
+    currentCroppedUrl,
     currentStyle,
     portraitImageForMeta,
     sessionId,

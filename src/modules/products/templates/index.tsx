@@ -1,4 +1,4 @@
-import React, { Suspense } from "react"
+import { Suspense } from "react"
 
 import ImageGallery from "@modules/products/components/image-gallery"
 import ProductActions from "@modules/products/components/product-actions"
@@ -7,8 +7,10 @@ import ProductTabs from "@modules/products/components/product-tabs"
 import RelatedProducts from "@modules/products/components/related-products"
 import ProductInfo from "@modules/products/templates/product-info"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
+import StyleTemplateProductTemplate from "@modules/style-portraits/templates/product"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
+import { isPortraitStyleTemplateProduct } from "@lib/portrait/style-template"
 
 import ProductActionsWrapper from "./product-actions-wrapper"
 import CustomPreview from "@modules/products/components/custom-preview"
@@ -20,14 +22,24 @@ type ProductTemplateProps = {
   images: HttpTypes.StoreProductImage[]
 }
 
-const ProductTemplate: React.FC<ProductTemplateProps> = ({
+const ProductTemplate = async ({
   product,
   region,
   countryCode,
   images,
-}) => {
+}: ProductTemplateProps) => {
   if (!product || !product.id) {
     return notFound()
+  }
+
+  if (isPortraitStyleTemplateProduct(product)) {
+    return (
+      <StyleTemplateProductTemplate
+        product={product}
+        countryCode={countryCode}
+        images={images}
+      />
+    )
   }
 
   // Check if this is a custom product (e.g., by handle or metadata)

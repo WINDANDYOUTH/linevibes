@@ -33,6 +33,7 @@ export async function GET(
          status,
          style,
          original_url AS "originalUrl",
+         cropped_url AS "croppedUrl",
          portrait_url AS "portraitUrl",
          portrait_svg_url AS "portraitSvgUrl",
          thumbnail_url AS "thumbnailUrl",

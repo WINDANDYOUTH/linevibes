@@ -11,6 +11,54 @@ type Options = {
 
 type InjectedDependencies = {}
 
+function normalizeAnonymousId(value: unknown) {
+  if (typeof value === "string") {
+    return value
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value.toString()
+  }
+
+  return undefined
+}
+
+function normalizeTraits(value: unknown) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, any>
+  }
+
+  return undefined
+}
+
+function buildSegmentIdentity(
+  userId: string | undefined,
+  anonymousId: unknown
+) {
+  const normalizedAnonymousId = normalizeAnonymousId(anonymousId)
+
+  if (userId && normalizedAnonymousId) {
+    return {
+      userId,
+      anonymousId: normalizedAnonymousId,
+    }
+  }
+
+  if (userId) {
+    return {
+      userId,
+    }
+  }
+
+  if (normalizedAnonymousId) {
+    return {
+      anonymousId: normalizedAnonymousId,
+    }
+  }
+
+  return null
+}
+
 class SegmentAnalyticsProviderService extends AbstractAnalyticsProviderService {
   private client?: Analytics
   static identifier = "segment"
@@ -32,20 +80,23 @@ class SegmentAnalyticsProviderService extends AbstractAnalyticsProviderService {
       data.properties.anonymousId : undefined
     const traits = data.properties && "traits" in data.properties ? 
       data.properties.traits : undefined
+    const identity = buildSegmentIdentity(data.actor_id, anonymousId)
+
+    if (!identity) {
+      return
+    }
 
     if ("group" in data) {
       this.client.group({
         groupId: data.group.id,
-        userId: data.actor_id,
-        anonymousId: typeof anonymousId === 'string' || typeof anonymousId === 'number' ? anonymousId : undefined,
-        traits: traits as Record<string, any>,
+        ...identity,
+        traits: normalizeTraits(traits),
         context: data.properties,
       })
     } else {
       this.client.identify({
-        userId: data.actor_id,
-        anonymousId: typeof anonymousId === 'string' || typeof anonymousId === 'number' ? anonymousId : undefined,
-        traits: traits as Record<string, any>,
+        ...identity,
+        traits: normalizeTraits(traits),
         context: data.properties,
       })
     }
@@ -58,8 +109,9 @@ class SegmentAnalyticsProviderService extends AbstractAnalyticsProviderService {
       data.actor_id || data.group?.id : data.actor_id
     const anonymousId = data.properties && "anonymousId" in data.properties ? 
       data.properties.anonymousId : undefined
+    const identity = buildSegmentIdentity(userId, anonymousId)
 
-    if (!userId && !anonymousId) {
+    if (!identity) {
       throw new MedusaError(
         MedusaError.Types.INVALID_DATA, 
         `Actor or group ID is required for event ${data.event}`
@@ -67,8 +119,7 @@ class SegmentAnalyticsProviderService extends AbstractAnalyticsProviderService {
     }
 
     this.client.track({
-      userId,
-      anonymousId: typeof anonymousId === 'string' || typeof anonymousId === 'number' ? anonymousId : undefined,
+      ...identity,
       event: data.event,
       properties: data.properties,
       timestamp: data.properties && "timestamp" in data.properties ? 

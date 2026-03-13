@@ -381,6 +381,7 @@ export default function HeroUploadSection() {
         sessionId: data.sessionId,
         portraitUrl: data.portraitUrl,
         originalUrl: data.originalUrl,
+        croppedUrl: data.croppedUrl ?? data.originalUrl,
         style: selectedStyle,
         createdAt: new Date().toISOString(),
       })

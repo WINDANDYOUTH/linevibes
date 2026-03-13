@@ -48,6 +48,7 @@ export type PresentationConfig = {
 export type GeneratedArtwork = {
   imageUrl: string | null
   originalUrl?: string | null
+  croppedUrl?: string | null
   generatedAt?: string | null
   sessionId?: string | null
   styleId?: string | null
@@ -60,6 +61,7 @@ export type GeneratedPortrait = {
   sessionId: string
   imageUrl: string
   originalUrl: string | null
+  croppedUrl: string | null
   generatedAt: string
   styleId: string | null
   stylePromptKey: string | null

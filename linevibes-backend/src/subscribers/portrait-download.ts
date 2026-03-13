@@ -3,6 +3,53 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { Resend } from "resend"
 import { generatePortraitDownloadEmail } from "../utils/portrait-email-template"
 
+type DeliveryPayload = {
+  deliveryPortraitUrl: string | null
+  portraitSvgUrl: string | null
+}
+
+async function resolvePortraitDelivery(
+  sessionId: string
+): Promise<DeliveryPayload | null> {
+  const storefrontBaseUrl =
+    process.env.STOREFRONT_INTERNAL_URL?.trim() ||
+    process.env.NEXT_PUBLIC_BASE_URL?.trim()
+  const fulfillmentSecret = process.env.PORTRAIT_FULFILLMENT_SECRET?.trim()
+
+  if (!storefrontBaseUrl || !fulfillmentSecret) {
+    return null
+  }
+
+  const response = await fetch(
+    `${storefrontBaseUrl.replace(/\/$/, "")}/api/internal/portrait/delivery`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-portrait-fulfillment-secret": fulfillmentSecret,
+      },
+      body: JSON.stringify({ sessionId }),
+    }
+  )
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "")
+    throw new Error(
+      `Storefront delivery lookup failed (${response.status}): ${errorText}`
+    )
+  }
+
+  const data = (await response.json()) as {
+    deliveryPortraitUrl?: string | null
+    portraitSvgUrl?: string | null
+  }
+
+  return {
+    deliveryPortraitUrl: data.deliveryPortraitUrl ?? null,
+    portraitSvgUrl: data.portraitSvgUrl ?? null,
+  }
+}
+
 /**
  * Portrait Download Notification Subscriber
  *
@@ -53,9 +100,19 @@ export default async function portraitDownloadHandler({
       return
     }
 
+    if (!order.email) {
+      logger.warn(
+        `[Portrait Download] Order ${data.id} has no customer email, skipping delivery email`
+      )
+      return
+    }
+
+    const orderNumber = order.display_id ?? order.id
+
     // Find portrait items that include digital download
     const portraitItems = (order.items || []).filter(
-      (item: any) => item.metadata?.includes_digital_download === "true"
+      (item: any) =>
+        item && item.metadata?.includes_digital_download === "true"
     )
 
     if (portraitItems.length === 0) {
@@ -69,10 +126,34 @@ export default async function portraitDownloadHandler({
 
     // Send download email for each portrait item
     for (const item of portraitItems) {
+      if (!item) {
+        continue
+      }
+
       const metadata = item.metadata || {}
-      const imageUrl = metadata.portrait_image_url as string
+      const sessionId = metadata.portrait_session_id as string | undefined
+      let imageUrl = metadata.portrait_image_url as string
+      let svgUrl = (metadata.portrait_svg_url as string) || null
       const variantType = (metadata.variant_type as string) || "digital"
       const style = (metadata.portrait_style as string) || "Classic"
+
+      if (sessionId) {
+        try {
+          const delivery = await resolvePortraitDelivery(sessionId)
+
+          if (delivery?.deliveryPortraitUrl) {
+            imageUrl = delivery.deliveryPortraitUrl
+          }
+
+          if (delivery?.portraitSvgUrl) {
+            svgUrl = delivery.portraitSvgUrl
+          }
+        } catch (deliveryError) {
+          logger.warn(
+            `[Portrait Download] Delivery lookup failed for session ${sessionId}, falling back to stored preview URL: ${deliveryError}`
+          )
+        }
+      }
 
       if (!imageUrl) {
         logger.warn(
@@ -81,12 +162,9 @@ export default async function portraitDownloadHandler({
         continue
       }
 
-      // Generate SVG URL (convention: same path, .svg extension)
-      const svgUrl = imageUrl.replace(/\.png$/i, ".svg")
-
       // Generate email HTML
       const html = generatePortraitDownloadEmail({
-        orderNumber: order.display_id,
+        orderNumber,
         portraitStyle: style,
         variantType,
         downloadUrlPng: imageUrl,
@@ -98,7 +176,7 @@ export default async function portraitDownloadHandler({
         const { data: emailResult, error } = await resend.emails.send({
           from: fromEmail,
           to: order.email,
-          subject: `Your Line Portrait is Ready! (Order #${order.display_id})`,
+          subject: `Your Line Portrait is Ready! (Order #${orderNumber})`,
           html,
         })
 

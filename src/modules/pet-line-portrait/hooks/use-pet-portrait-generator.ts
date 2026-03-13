@@ -13,6 +13,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useAnalytics } from "@lib/analytics/provider"
 import { addToCart } from "@lib/data/cart"
 import { getHistory, saveToHistory } from "@lib/portrait-history"
+import { imageUrlToFile } from "@lib/util/image-url-to-file"
 
 import { calculateGeneratorPrice } from "../config/pricing"
 import { PET_PORTRAIT_STYLES } from "../config/styles"
@@ -45,6 +46,7 @@ type AccountPortraitResponse = {
   sessionId: string
   style: string
   originalUrl: string | null
+  croppedUrl: string | null
   portraitUrl: string | null
   createdAt: string
 }
@@ -60,6 +62,7 @@ const PORTRAIT_RETENTION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 const emptyGeneratedArtwork: GeneratedArtwork = {
   imageUrl: null,
   originalUrl: null,
+  croppedUrl: null,
   generatedAt: null,
   sessionId: null,
   styleId: null,
@@ -115,15 +118,6 @@ async function readJsonOrText(response: Response) {
   }
 }
 
-async function imageUrlToFile(imageUrl: string, filename: string) {
-  const response = await fetch(imageUrl)
-  const blob = await response.blob()
-  const ext = blob.type.split("/")[1] || "png"
-  return new File([blob], `${filename}.${ext}`, {
-    type: blob.type || "image/png",
-  })
-}
-
 function normalizeHexColor(input: string, fallback: string) {
   const normalized = input.trim()
   const normalizedLower = normalized.toLowerCase()
@@ -160,6 +154,7 @@ function buildGeneratedArtwork(
   return {
     imageUrl: portrait.imageUrl,
     originalUrl: portrait.originalUrl,
+    croppedUrl: portrait.croppedUrl,
     generatedAt: portrait.generatedAt,
     sessionId: portrait.sessionId,
     styleId: portrait.styleId,
@@ -177,7 +172,7 @@ function buildLastGeneratedInput(
   }
 
   return {
-    croppedImageUrl: portrait.originalUrl,
+    croppedImageUrl: portrait.croppedUrl ?? portrait.originalUrl,
     selectedStyleId: portrait.styleId,
   }
 }
@@ -186,6 +181,7 @@ function mapHistoryEntryToPortrait(entry: {
   sessionId: string
   portraitUrl: string
   originalUrl?: string
+  croppedUrl?: string
   style: string
   createdAt: string
 }): GeneratedPortrait | null {
@@ -203,6 +199,7 @@ function mapHistoryEntryToPortrait(entry: {
     sessionId: entry.sessionId,
     imageUrl: entry.portraitUrl,
     originalUrl: entry.originalUrl ?? null,
+    croppedUrl: entry.croppedUrl ?? entry.originalUrl ?? null,
     generatedAt: entry.createdAt,
     styleId: style?.id ?? null,
     stylePromptKey: entry.style || style?.promptKey || null,
@@ -228,6 +225,7 @@ function mapAccountPortraitToGeneratedPortrait(
     sessionId: portrait.sessionId,
     imageUrl: portrait.portraitUrl,
     originalUrl: portrait.originalUrl,
+    croppedUrl: portrait.croppedUrl,
     generatedAt: portrait.createdAt,
     styleId: style?.id ?? null,
     stylePromptKey: portrait.style || style?.promptKey || null,
@@ -476,7 +474,10 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
             sourceImageUrl:
               draft?.sourceImageUrl ?? activePortrait?.originalUrl ?? null,
             croppedImageUrl:
-              draft?.croppedImageUrl ?? activePortrait?.originalUrl ?? null,
+              draft?.croppedImageUrl ??
+              activePortrait?.croppedUrl ??
+              activePortrait?.originalUrl ??
+              null,
             selectedStyleId:
               draft?.selectedStyleId ??
               activePortrait?.styleId ??
@@ -750,7 +751,9 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
           sourceImageUrl:
             portrait.originalUrl ?? current.aiInput.sourceImageUrl,
           croppedImageUrl:
-            portrait.originalUrl ?? current.aiInput.croppedImageUrl,
+            portrait.croppedUrl ??
+            portrait.originalUrl ??
+            current.aiInput.croppedImageUrl,
           selectedStyleId: portrait.styleId ?? current.aiInput.selectedStyleId,
         },
         generatedArtwork: buildGeneratedArtwork(portrait),
@@ -764,6 +767,7 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
 
   const generateArtwork = useCallback(async () => {
     const croppedImageUrl = state.aiInput.croppedImageUrl
+    const sourceImageUrl = state.aiInput.sourceImageUrl
     const selectedStyle = getStyleById(state.aiInput.selectedStyleId)
 
     if (!croppedImageUrl || !selectedStyle) {
@@ -777,9 +781,17 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
     }))
 
     try {
-      const file = await imageUrlToFile(croppedImageUrl, "pet-line-portrait")
+      const [file, originalFile] = await Promise.all([
+        imageUrlToFile(croppedImageUrl, "pet-line-portrait"),
+        sourceImageUrl && sourceImageUrl !== croppedImageUrl
+          ? imageUrlToFile(sourceImageUrl, "pet-line-portrait-original")
+          : Promise.resolve(null),
+      ])
       const formData = new FormData()
       formData.append("photo", file)
+      if (originalFile) {
+        formData.append("originalPhoto", originalFile)
+      }
       formData.append("style", selectedStyle.promptKey)
 
       trackCustomEvent("pet_portrait_preview_requested", {
@@ -816,6 +828,10 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
         originalUrl:
           data && typeof data === "object" && "originalUrl" in data
             ? (data.originalUrl as string | null) ?? null
+            : sourceImageUrl ?? croppedImageUrl,
+        croppedUrl:
+          data && typeof data === "object" && "croppedUrl" in data
+            ? (data.croppedUrl as string | null) ?? null
             : croppedImageUrl,
         generatedAt: new Date().toISOString(),
         styleId: selectedStyle.id,
@@ -838,6 +854,7 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
         sessionId: portrait.sessionId,
         portraitUrl: portrait.imageUrl,
         originalUrl: portrait.originalUrl ?? undefined,
+        croppedUrl: portrait.croppedUrl ?? undefined,
         style: portrait.stylePromptKey ?? selectedStyle.promptKey,
         createdAt: portrait.generatedAt,
       })
@@ -850,7 +867,9 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
         const restoredSourceUrl =
           portrait.originalUrl ?? current.aiInput.sourceImageUrl
         const restoredCroppedUrl =
-          portrait.originalUrl ?? current.aiInput.croppedImageUrl
+          portrait.croppedUrl ??
+          portrait.originalUrl ??
+          current.aiInput.croppedImageUrl
 
         return {
           ...current,
@@ -891,6 +910,7 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
       })
     }
   }, [
+    state.aiInput.sourceImageUrl,
     state.aiInput.croppedImageUrl,
     state.aiInput.selectedStyleId,
     trackCustomEvent,
@@ -923,8 +943,12 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
       const metadata: Record<string, string> = {
         generator_type: "pet-line-portrait",
         portrait_image_url: portraitImageUrl,
-        source_image_url: state.aiInput.sourceImageUrl ?? "",
-        cropped_image_url: state.aiInput.croppedImageUrl ?? "",
+        source_image_url:
+          state.generatedArtwork.originalUrl ?? state.aiInput.sourceImageUrl ?? "",
+        cropped_image_url:
+          state.generatedArtwork.croppedUrl ??
+          state.aiInput.croppedImageUrl ??
+          "",
         selected_style_id: state.aiInput.selectedStyleId ?? "",
         custom_text: state.presentation.customText,
         text_font: state.presentation.textFont,
@@ -984,7 +1008,9 @@ export function usePetPortraitGenerator(): UsePetPortraitGeneratorReturn {
     state.aiInput.croppedImageUrl,
     state.aiInput.selectedStyleId,
     state.aiInput.sourceImageUrl,
+    state.generatedArtwork.croppedUrl,
     state.generatedArtwork.imageUrl,
+    state.generatedArtwork.originalUrl,
     state.generatedArtwork.sessionId,
     state.presentation.customText,
     state.presentation.frameOption,

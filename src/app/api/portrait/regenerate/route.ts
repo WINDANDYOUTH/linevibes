@@ -1,14 +1,14 @@
 /**
  * POST /api/portrait/regenerate
  *
- * Re-generates a line art portrait using the original photo already stored
- * in R2. This avoids re-uploading and lets the user try again if the first
- * result isn't satisfactory.
+ * Re-generates a line art portrait using the saved generation input already
+ * stored in R2. This avoids re-uploading and lets the user try again if the
+ * first result isn't satisfactory.
  *
  * Flow:
  * 1. Look up the existing session in PostgreSQL
- * 2. Verify it has an original_url (photo already in R2)
- * 3. Download the original image from R2
+ * 2. Verify it has a saved source image already in R2
+ * 3. Download the cropped input when present, otherwise the original upload
  * 4. Call Gemini again to generate a new portrait
  * 5. Upload the result to R2 (overwriting previous portrait)
  * 6. Update the session record
@@ -23,60 +23,137 @@ import {
   generateLinePortrait,
   type PortraitStyle,
 } from "@lib/ai/generate-portrait"
+import { getCustomerIdFromRequest } from "@lib/auth/api-auth"
 import { getPool } from "@lib/db"
 import { ensurePortraitSessionsTable } from "@lib/db/init"
+import {
+  acquirePortraitActorLock,
+  applyPortraitOwnerCookie,
+  assertPortraitGenerationAllowed,
+  assertPortraitOwnership,
+  getPortraitOwnerContext,
+  isPortraitGuardError,
+  recordPortraitGenerationEvent,
+} from "@lib/portrait/anti-abuse"
 import { portraitKey, uploadToR2 } from "@lib/r2"
 
 export const maxDuration = 120
 export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
+  const customerId = await getCustomerIdFromRequest()
+  const owner = getPortraitOwnerContext(request, customerId)
+  const respond = (
+    body: Record<string, unknown>,
+    init?: ResponseInit
+  ) => {
+    const response = NextResponse.json(body, init)
+    applyPortraitOwnerCookie(response, owner)
+    return response
+  }
+
+  let sessionId: string | null = null
+
   try {
     const body = await request.json()
-    const { sessionId, style } = body as {
+    const { sessionId: requestedSessionId, style } = body as {
       sessionId?: string
       style?: PortraitStyle
     }
 
-    if (!sessionId) {
-      return NextResponse.json({ error: "Missing sessionId" }, { status: 400 })
+    if (!requestedSessionId) {
+      return respond({ error: "Missing sessionId" }, { status: 400 })
     }
+
+    sessionId = requestedSessionId
 
     await ensurePortraitSessionsTable()
     const pool = getPool()
+    const client = await pool.connect()
 
-    const result = await pool.query(
-      `SELECT id, status, style, original_url
-       FROM portrait_sessions
-       WHERE id = $1`,
-      [sessionId]
-    )
-
-    if (result.rows.length === 0) {
-      return NextResponse.json({ error: "Session not found" }, { status: 404 })
+    type PortraitSessionRow = {
+      anonymousOwnerToken: string | null
+      customerId: string | null
+      croppedUrl: string | null
+      originalUrl: string | null
+      requestIp: string | null
+      style: PortraitStyle | null
     }
 
-    const session = result.rows[0]
+    let session: PortraitSessionRow | null = null
+    let targetStyle: PortraitStyle = "classic"
 
-    if (!session.original_url) {
-      return NextResponse.json(
-        { error: "No original photo found for this session" },
-        { status: 400 }
+    try {
+      await client.query("BEGIN")
+
+      const result = await client.query<PortraitSessionRow>(
+         `SELECT
+            customer_id AS "customerId",
+            anonymous_owner_token AS "anonymousOwnerToken",
+            cropped_url AS "croppedUrl",
+            original_url AS "originalUrl",
+            request_ip AS "requestIp",
+            style
+         FROM portrait_sessions
+         WHERE id = $1`,
+        [sessionId]
       )
+
+      if (result.rows.length === 0) {
+        await client.query("ROLLBACK")
+        return respond({ error: "Session not found" }, { status: 404 })
+      }
+
+      session = result.rows[0]
+
+      assertPortraitOwnership(owner, {
+        anonymousOwnerToken: session.anonymousOwnerToken,
+        customerId: session.customerId,
+        requestIp: session.requestIp,
+      })
+      await acquirePortraitActorLock(client, owner, sessionId)
+      await assertPortraitGenerationAllowed(client, owner)
+
+      if (!session.croppedUrl && !session.originalUrl) {
+        await client.query("ROLLBACK")
+        return respond(
+          { error: "No source photo found for this session" },
+          { status: 400 }
+        )
+      }
+
+      targetStyle = style || session.style || "classic"
+
+      await client.query(
+        `UPDATE portrait_sessions
+         SET status = 'generating',
+             style = $1,
+             portrait_svg_url = NULL,
+             error_message = NULL,
+             updated_at = NOW()
+         WHERE id = $2`,
+        [targetStyle, sessionId]
+      )
+
+      await recordPortraitGenerationEvent(client, {
+        action: "regenerate",
+        owner,
+        sessionId,
+      })
+
+      await client.query("COMMIT")
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => undefined)
+      throw error
+    } finally {
+      client.release()
     }
 
-    const targetStyle = style || session.style || "classic"
+    const generationSourceUrl = session?.croppedUrl ?? session?.originalUrl ?? null
 
-    await pool.query(
-      `UPDATE portrait_sessions
-       SET status = 'generating',
-           style = $1,
-           portrait_svg_url = NULL,
-           error_message = NULL,
-           updated_at = NOW()
-       WHERE id = $2`,
-      [targetStyle, sessionId]
-    )
+    if (!generationSourceUrl) {
+      throw new Error("Portrait session state missing after validation")
+    }
 
     console.log(
       `[Portrait] Regenerating session: ${sessionId} (style: ${targetStyle})`
@@ -88,13 +165,13 @@ export async function POST(request: NextRequest) {
 
     try {
       const { buffer: originalBuffer, mimeType } = await downloadImage(
-        session.original_url
+        generationSourceUrl
       )
       const result = await generateLinePortrait(
         originalBuffer,
         mimeType,
         targetStyle,
-        session.original_url
+        generationSourceUrl
       )
       provider = result.provider
       model = result.model
@@ -126,7 +203,7 @@ export async function POST(request: NextRequest) {
         [aiError.message || "Unknown AI error", sessionId]
       )
 
-      return NextResponse.json(
+      return respond(
         {
           error: "Regeneration failed. Please try again.",
           sessionId,
@@ -136,19 +213,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({
+    return respond({
       sessionId,
       portraitUrl,
       portraitSvgUrl: null,
-      originalUrl: session.original_url,
+      originalUrl: session.originalUrl,
+      croppedUrl: generationSourceUrl,
       style: targetStyle,
       provider,
       model,
       status: "completed",
     })
   } catch (error: any) {
+    if (isPortraitGuardError(error)) {
+      const response = respond(
+        { error: error.message },
+        { status: error.status }
+      )
+
+      if (error.retryAfterSeconds) {
+        response.headers.set("Retry-After", String(error.retryAfterSeconds))
+      }
+
+      return response
+    }
+
     console.error("[Portrait] Regenerate unexpected error:", error)
-    return NextResponse.json(
+    return respond(
       {
         error: "Internal server error",
         ...(process.env.NODE_ENV !== "production"

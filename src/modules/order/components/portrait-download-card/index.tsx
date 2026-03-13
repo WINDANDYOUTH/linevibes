@@ -7,6 +7,7 @@ import { getPortraitLineItemMetadata } from "@lib/util/portrait-line-item-metada
 type PortraitDownloadCardProps = {
   items: HttpTypes.StoreOrderLineItem[]
   email: string
+  deliveryUrls?: Record<string, string>
 }
 
 function formatStyleLabel(style: string | null) {
@@ -24,6 +25,7 @@ function formatStyleLabel(style: string | null) {
 export default function PortraitDownloadCard({
   items,
   email,
+  deliveryUrls = {},
 }: PortraitDownloadCardProps) {
   const portraitItems = items
     .map((item) => ({
@@ -77,7 +79,10 @@ export default function PortraitDownloadCard({
 
       <div className="space-y-4 bg-white p-6">
         {portraitItems.map(({ item, portraitMeta }, idx) => {
+          const sessionId = portraitMeta.portraitSessionId
           const imageUrl = portraitMeta.portraitImageUrl as string
+          const downloadUrl =
+            (sessionId ? deliveryUrls[sessionId] : null) ?? imageUrl
           const svgUrl = portraitMeta.portraitSvgUrl
           const variantType = portraitMeta.variantType || "digital"
           const styleLabel = formatStyleLabel(portraitMeta.portraitStyle)
@@ -89,7 +94,7 @@ export default function PortraitDownloadCard({
             >
               <div className="h-20 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-white">
                 <img
-                  src={imageUrl}
+                  src={downloadUrl}
                   alt="Your line portrait"
                   className="h-full w-full object-contain"
                 />
@@ -125,9 +130,9 @@ export default function PortraitDownloadCard({
 
               <div className="flex flex-shrink-0 flex-col gap-2">
                 <a
-                  href={imageUrl}
+                  href={downloadUrl}
                   download={`line-portrait-${
-                    portraitMeta.portraitSessionId || "download"
+                    sessionId || "download"
                   }.png`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -154,7 +159,7 @@ export default function PortraitDownloadCard({
                   <a
                     href={svgUrl}
                     download={`line-portrait-${
-                      portraitMeta.portraitSessionId || "download"
+                      sessionId || "download"
                     }.svg`}
                     target="_blank"
                     rel="noopener noreferrer"

@@ -1,11 +1,11 @@
-"use client"
-
 import { XMark } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
+import { getPortraitDeliveryUrlMap } from "@lib/portrait/delivery"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Help from "@modules/order/components/help"
 import Items from "@modules/order/components/items"
 import OrderDetails from "@modules/order/components/order-details"
+import PortraitDownloadCard from "@modules/order/components/portrait-download-card"
 import OrderSummary from "@modules/order/components/order-summary"
 import ShippingDetails from "@modules/order/components/shipping-details"
 import React from "react"
@@ -14,9 +14,13 @@ type OrderDetailsTemplateProps = {
   order: HttpTypes.StoreOrder
 }
 
-const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
+const OrderDetailsTemplate = async ({
   order,
-}) => {
+}: OrderDetailsTemplateProps) => {
+  const deliveryUrls = order.items?.length
+    ? await getPortraitDeliveryUrlMap(order.items)
+    : {}
+
   return (
     <div className="flex flex-col justify-center gap-y-4">
       <div className="flex gap-2 justify-between items-center">
@@ -34,6 +38,13 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
         data-testid="order-details-container"
       >
         <OrderDetails order={order} showStatus />
+        {order.items?.length ? (
+          <PortraitDownloadCard
+            items={order.items}
+            email={order.email || ""}
+            deliveryUrls={deliveryUrls}
+          />
+        ) : null}
         <Items order={order} />
         <ShippingDetails order={order} />
         <OrderSummary order={order} />

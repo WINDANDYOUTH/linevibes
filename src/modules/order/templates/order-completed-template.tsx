@@ -11,6 +11,7 @@ import PaymentDetails from "@modules/order/components/payment-details"
 import PortraitDownloadCard from "@modules/order/components/portrait-download-card"
 import OrderAnalytics from "@modules/order/components/order-analytics"
 import { HttpTypes } from "@medusajs/types"
+import { getPortraitDeliveryUrlMap } from "@lib/portrait/delivery"
 import { getPortraitLineItemMetadata } from "@lib/util/portrait-line-item-metadata"
 
 type OrderCompletedTemplateProps = {
@@ -34,6 +35,10 @@ export default async function OrderCompletedTemplate({
       portraitMeta.includesDigitalDownload && !!portraitMeta.portraitImageUrl
     )
   })
+  const deliveryUrls =
+    hasPortraitItems && order.items?.length
+      ? await getPortraitDeliveryUrlMap(order.items)
+      : {}
 
   return (
     <div className="py-6 min-h-[calc(100vh-64px)]">
@@ -58,6 +63,7 @@ export default async function OrderCompletedTemplate({
             <PortraitDownloadCard
               items={order.items}
               email={order.email || ""}
+              deliveryUrls={deliveryUrls}
             />
           )}
 
