@@ -72,10 +72,17 @@ const ASPECT_PRESETS: AspectPreset[] = [
 function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new window.Image()
+    if (/^https?:\/\//i.test(src)) {
+      image.crossOrigin = "anonymous"
+    }
     image.onload = () => resolve(image)
     image.onerror = () => reject(new Error("Could not read image"))
     image.src = src
   })
+}
+
+function isRemoteUrl(url: string | null | undefined) {
+  return typeof url === "string" && /^https?:\/\//i.test(url)
 }
 
 function getAspectPreset(aspectId: AspectPreset["id"]) {
@@ -345,14 +352,30 @@ function cropRectToObjectUrl(image: HTMLImageElement, cropRect: CropRect) {
   )
 
   return new Promise<string>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error("Could not update crop preview."))
-        return
-      }
+    try {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(
+            new Error(
+              "Could not update crop preview. If this image came from a remote URL, enable CORS on the uploads domain or re-upload the original file."
+            )
+          )
+          return
+        }
 
-      resolve(URL.createObjectURL(blob))
-    }, "image/png")
+        resolve(URL.createObjectURL(blob))
+      }, "image/png")
+    } catch (error) {
+      reject(
+        error instanceof DOMException && error.name === "SecurityError"
+          ? new Error(
+              "This image can't be re-cropped in the browser because the remote image URL does not allow canvas export. Re-upload the original file or enable CORS on the uploads domain."
+            )
+          : error instanceof Error
+          ? error
+          : new Error("Could not update crop preview.")
+      )
+    }
   })
 }
 
@@ -509,7 +532,17 @@ export default function ImageUploadCropper({
           committedDraft.rect.width === imageElement.width &&
           committedDraft.rect.height === imageElement.height
 
+        const shouldReuseRemoteCrop =
+          !!croppedImageUrl &&
+          isRemoteUrl(sourceImageUrl) &&
+          isRemoteUrl(croppedImageUrl)
+
         if (shouldReuseExistingCrop) {
+          onCroppedImageChangeRef.current(croppedImageUrl)
+          return
+        }
+
+        if (shouldReuseRemoteCrop) {
           onCroppedImageChangeRef.current(croppedImageUrl)
           return
         }
