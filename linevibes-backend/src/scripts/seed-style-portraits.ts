@@ -24,6 +24,44 @@ function slugToSku(input: string) {
   return input.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toUpperCase();
 }
 
+function normalizeOrigin(value?: string | null) {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    return new URL(trimmed).origin;
+  } catch {
+    return null;
+  }
+}
+
+function getStorefrontAssetBaseUrl() {
+  const corsOrigin = process.env.STORE_CORS?.split(",")
+    .map((entry) => normalizeOrigin(entry))
+    .find(Boolean);
+
+  return (
+    normalizeOrigin(process.env.STOREFRONT_PUBLIC_URL) ||
+    normalizeOrigin(process.env.NEXT_PUBLIC_BASE_URL) ||
+    corsOrigin ||
+    "https://www.linevibes.com"
+  );
+}
+
+function resolveProductImageUrl(imageUrl: string) {
+  if (/^https?:\/\//i.test(imageUrl)) {
+    return imageUrl;
+  }
+
+  return new URL(
+    imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`,
+    getStorefrontAssetBaseUrl()
+  ).toString();
+}
+
 async function ensureTagMap(productService: any, logger: any): Promise<TagMap> {
   const tagMap: TagMap = {};
 
@@ -110,6 +148,7 @@ function buildOutputCreateInput(
   shippingProfileId: string,
   collectionMap: CollectionMap
 ) {
+  const resolvedImageUrl = resolveProductImageUrl(definition.imageUrl);
   const collectionId = definition.collectionHandle
     ? collectionMap[definition.collectionHandle]?.id
     : undefined;
@@ -124,7 +163,7 @@ function buildOutputCreateInput(
     shipping_profile_id: shippingProfileId,
     collection_id: collectionId,
     metadata: definition.metadata,
-    images: [{ url: definition.imageUrl }],
+    images: [{ url: resolvedImageUrl }],
     options: [{ title: "Edition", values: ["Standard"] }],
     variants: [
       {
@@ -147,6 +186,7 @@ function buildOutputUpdateInput(
   shippingProfileId: string,
   collectionMap: CollectionMap
 ) {
+  const resolvedImageUrl = resolveProductImageUrl(definition.imageUrl);
   const collectionId = definition.collectionHandle
     ? collectionMap[definition.collectionHandle]?.id
     : undefined;
@@ -161,12 +201,14 @@ function buildOutputUpdateInput(
     shipping_profile_id: shippingProfileId,
     collection_id: collectionId,
     metadata: definition.metadata,
-    images: [{ url: definition.imageUrl }],
+    images: [{ url: resolvedImageUrl }],
     sales_channels: [{ id: salesChannelId }],
   };
 }
 
 function buildTemplateMetadata(definition: StylePortraitTemplateProductSeed) {
+  const resolvedImageUrl = resolveProductImageUrl(definition.imageUrl);
+
   return {
     portrait_mode: "style-template",
     template_group: definition.templateGroup,
@@ -174,8 +216,8 @@ function buildTemplateMetadata(definition: StylePortraitTemplateProductSeed) {
     template_id: definition.templateId,
     template_badge: definition.badge || "",
     template_sort_order: String(definition.sortOrder),
-    preview_image_url: definition.imageUrl,
-    reference_image_url: definition.imageUrl,
+    preview_image_url: resolvedImageUrl,
+    reference_image_url: resolvedImageUrl,
     prompt_preset: definition.promptPreset,
     prompt_notes: definition.promptNotes || "",
     negative_prompt: definition.negativePrompt || "",
@@ -193,6 +235,7 @@ function buildTemplateCreateInput(
   collectionMap: CollectionMap,
   tagMap: TagMap
 ) {
+  const resolvedImageUrl = resolveProductImageUrl(definition.imageUrl);
   const collectionId = collectionMap[definition.collectionHandle]?.id;
 
   return {
@@ -209,7 +252,7 @@ function buildTemplateCreateInput(
       .filter(Boolean)
       .map((id) => ({ id })),
     metadata: buildTemplateMetadata(definition),
-    images: [{ url: definition.imageUrl }],
+    images: [{ url: resolvedImageUrl }],
     options: [{ title: "Template", values: ["Default"] }],
     variants: [
       {
@@ -233,6 +276,7 @@ function buildTemplateUpdateInput(
   collectionMap: CollectionMap,
   tagMap: TagMap
 ) {
+  const resolvedImageUrl = resolveProductImageUrl(definition.imageUrl);
   const collectionId = collectionMap[definition.collectionHandle]?.id;
 
   return {
@@ -249,7 +293,7 @@ function buildTemplateUpdateInput(
       .filter(Boolean)
       .map((tagId) => ({ id: tagId })),
     metadata: buildTemplateMetadata(definition),
-    images: [{ url: definition.imageUrl }],
+    images: [{ url: resolvedImageUrl }],
     sales_channels: [{ id: salesChannelId }],
   };
 }
