@@ -351,11 +351,19 @@ export default function StyleTemplateProduct({
   }
 
   function handleSourceImageChange(url: string | null) {
+    if (url === sourceImageUrl) {
+      return
+    }
+
     setSourceImageUrl(url)
     resetGeneratedState()
   }
 
   function handleCroppedImageChange(url: string | null) {
+    if (url === croppedImageUrl) {
+      return
+    }
+
     setCroppedImageUrl(url)
     resetGeneratedState()
   }
